@@ -24,11 +24,10 @@ echo -e "${Purple}
 ${White}"
 echo
 rm -rf ${Download_Tags}
-[[ "${GOOGLECHECK}" == "1" ]] && {
-	wget -q --no-cookie --no-check-certificate -T 15 -t 4 -P ${Download_Path} ${Github_Tagstwo} -O ${Download_Path}/Github_Tags
-} || {
-	wget -q --no-cookie --no-check-certificate -T 15 -t 4 ${Github_Tags} -O ${Download_Tags}
-}
+wget -q --no-cookie --no-check-certificate ${Github_Tags} -O ${Download_Tags} > /dev/null 2>&1
+if [[ $? -ne 0 ]];then
+	wget -q --no-cookie --no-check-certificate -T 15 -t 4 -P ${Download_Path} ${Github_Tagstwo} -O ${Download_Path}/Github_Tags > /dev/null 2>&1
+fi
 [[ -n ${Download_Tags} ]] && export CLOUD_Name="$(egrep -o "${LUCI_Name}-${CURRENT_Version}${BOOT_Type}-[a-zA-Z0-9]+${Firmware_SFX}" ${Download_Tags} | awk 'END {print}')"
 [[ -z ${CLOUD_Name} ]] && export CLOUD_Name="${LUCI_Name}-${CURRENT_Version}${Firmware_SFX}"
 echo -e "${Green}详细参数：
@@ -73,7 +72,7 @@ export Apidz="${Github##*com/}"
 export Author="${Apidz%/*}"
 export CangKu="${Apidz##*/}"
 export Github_Tags="https://api.github.com/repos/${Apidz}/releases/tags/AutoUpdate"
-export Github_Tagstwo="https://ghproxy.com/${Github}/releases/download/AutoUpdate/${Ghproxy_Tags}"
+export Github_Tagstwo="${Github}/releases/download/AutoUpdate/${Ghproxy_Tags}"
 export Kernel="$(egrep -o "[0-9]+\.[0-9]+\.[0-9]+" /usr/lib/opkg/info/kernel.control)"
 export Overlay_Available="$(df -h | grep ":/overlay" | awk '{print $4}' | awk 'NR==1')"
 rm -rf "${Download_Path}" && export TMP_Available="$(df -m | grep "/tmp" | awk '{print $4}' | awk 'NR==1' | awk -F. '{print $1}')"
@@ -157,7 +156,7 @@ else
 		-t)
 			Input_Other="-t"
 			TIME h "执行: 测试模式"
-			TIME g "测试模式(只运行,不安装,查看更新固件操作流程是否正确)"
+			TIME z "测试模式(只运行,不安装,查看更新固件操作流程是否正确)"
 		;;
 		-w)
 			Input_Other="-w"
@@ -219,23 +218,16 @@ else
 	;;
 	esac
 fi
-TIME b "检测网络环境中,请稍后..."
-if [[ "$(cat ${Download_Path}/Installed_PKG_List)" =~ curl ]];then
-	export Google_Check=$(curl -I -s --connect-timeout 8 google.com -w %{http_code} | tail -n1)
-	if [ ! "$Google_Check" == 301 ];then
-		export GOOGLE_CHECK=1
-		TIME z "警告：google连接失败,或许有可能会获取不了云端固件版本信息!"
-	else
-		TIME y "google连接成功！"
-	fi
-fi
 [[ -z ${CURRENT_Version} ]] && TIME r "本地固件版本获取失败,请检查/bin/openwrt_info文件的值!" && exit 1
 [[ -z ${Github} ]] && TIME r "Github地址获取失败,请检查/bin/openwrt_info文件的值!" && exit 1
 TIME g "正在获取云端固件版本信息..."
 [ ! -d ${Download_Path} ] && mkdir -p ${Download_Path}
-wget --no-cookie --no-check-certificate -T 15 -t 4 ${Github_Tags} -O ${Download_Tags}
+wget -q --no-cookie --no-check-certificate -T 15 -t 4 ${Github_Tags} -O ${Download_Tags}
 if [[ $? -ne 0 ]];then
-	wget --no-cookie --no-check-certificate -T 15 -t 4 -P ${Download_Path} ${Github_Tagstwo} -O ${Download_Path}/Github_Tags
+	wget -q --no-cookie --no-check-certificate -P ${Download_Path} https://pd.zwc365.com/${Github_Tagstwo} -O ${Download_Path}/Github_Tags
+	if [[ $? -ne 0 ]];then
+		wget -q --no-cookie --no-check-certificate -T 15 -t 4 -P ${Download_Path} https://ghproxy.com/${Github_Tagstwo} -O ${Download_Path}/Github_Tags
+	fi
 	if [[ $? -ne 0 ]];then
 		TIME r "获取固件版本信息失败,请检测网络或您的网络需要翻墙,或者您更改的Github地址为无效地址!"
 		echo
