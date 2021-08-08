@@ -1,5 +1,5 @@
 #!/bin/bash
-# https://github.com/281677160/AutoBuild-OpenWrt
+# https://github.com/shidahuilang/langlang
 # common Module by 28677160
 # matrix.target=${Modelfile}
 
@@ -504,6 +504,13 @@ TIME z " 系统空间      类型   总数  已用  可用 使用率"
 cd ../ && df -hT $PWD && cd openwrt
 echo
 echo
+TIME z "  本服务器的CPU型号为[ ${CPUNAME} ]"
+echo
+TIME z "  在此系统上使用核心数为[ ${CPUCORES} ],线程数为[ $(nproc) ]"
+echo
+
+echo
+TIME z "  下面将使用[ $(nproc)线程 ]编译固件"
 if [ -n "$(ls -A "${Home}/EXT4" 2>/dev/null)" ]; then
 	echo
 	echo
@@ -528,3 +535,4 @@ if [ -n "$(ls -A "${Home}/Plug-in" 2>/dev/null)" ]; then
 	echo
 fi
 }
+
