@@ -3,7 +3,7 @@
 # AutoBuild Module by Hyy2001
 # AutoUpdate for Openwrt
 
-Version=V6.2
+Version=V6.5
 
 Shell_Helper() {
 echo
@@ -23,13 +23,12 @@ echo -e "${Purple}
 ===============================================================================================
 ${White}"
 echo
-rm -rf ${Download_Tags}
-wget -q --no-cookie --no-check-certificate ${Github_Tags} -O ${Download_Tags} > /dev/null 2>&1
-if [[ $? -ne 0 ]];then
-	wget -q --no-cookie --no-check-certificate -T 15 -t 4 -P ${Download_Path} ${Github_Tagstwo} -O ${Download_Path}/Github_Tags > /dev/null 2>&1
-fi
-[[ -n ${Download_Tags} ]] && export CLOUD_Name="$(egrep -o "${LUCI_Name}-${CURRENT_Version}${BOOT_Type}-[a-zA-Z0-9]+${Firmware_SFX}" ${Download_Tags} | awk 'END {print}')"
-[[ -z ${CLOUD_Name} ]] && export CLOUD_Name="${LUCI_Name}-${CURRENT_Version}${Firmware_SFX}"
+[[ -f /etc/CLOUD_Name ]] && {
+	export CLOUD_Name="$(egrep -o "${LUCI_Name}-${CURRENT_Version}${BOOT_Type}-[a-zA-Z0-9]+${Firmware_SFX}" /etc/CLOUD_Name | awk 'END {print}')" > /dev/null 2>&1
+} || {
+	wget -q --no-cookie --no-check-certificate -T 15 -t 4 -P ${Download_Path} https://ghproxy.com/${Github_Tagstwo} -O ${Download_Path}/Github_Tags > /dev/null 2>&1
+	export CLOUD_Name="$(egrep -o "${LUCI_Name}-${CURRENT_Version}${BOOT_Type}-[a-zA-Z0-9]+${Firmware_SFX}" ${Download_Tags} | awk 'END {print}')" > /dev/null 2>&1
+}
 echo -e "${Green}详细参数：
 
 /overlay 可用:					${Overlay_Available}
@@ -72,13 +71,12 @@ export Apidz="${Github##*com/}"
 export Author="${Apidz%/*}"
 export CangKu="${Apidz##*/}"
 export Github_Tags="https://api.github.com/repos/${Apidz}/releases/tags/AutoUpdate"
-export Github_Tagstwo="${Github}/releases/download/AutoUpdate/${Ghproxy_Tags}"
+export Github_Tagstwo="${Github}/releases/download/AutoUpdate/Github_Tags"
 export Kernel="$(egrep -o "[0-9]+\.[0-9]+\.[0-9]+" /usr/lib/opkg/info/kernel.control)"
 export Overlay_Available="$(df -h | grep ":/overlay" | awk '{print $4}' | awk 'NR==1')"
 rm -rf "${Download_Path}" && export TMP_Available="$(df -m | grep "/tmp" | awk '{print $4}' | awk 'NR==1' | awk -F. '{print $1}')"
 [ ! -d "${Download_Path}" ] && mkdir -p ${Download_Path}
 opkg list | awk '{print $1}' > ${Download_Path}/Installed_PKG_List
-opkg remove gzip > /dev/null 2>&1
 AutoUpdate_Log_Path=/tmp
 GET_PID() {
 	local Result
@@ -138,7 +136,7 @@ x86-64)
 	export EFI_Mode=""
 	[[ -z "${Firmware_Type}" ]] && export Firmware_SFX=".bin"
 esac
-CURRENT_Ver="${CURRENT_Version}${BOOT_Type}"
+export CURRENT_Ver="${CURRENT_Version}${BOOT_Type}"
 echo "CURRENT_Version=${CURRENT_Version}" > /etc/openwrt_ver
 echo -e "\nCURRENT_Model=${EFI_Mode}${Firmware_SFX}" >> /etc/openwrt_ver
 echo -e "\nNEI_Luci=${Kernel} - ${Luci_Edition}" >> /etc/openwrt_ver
@@ -204,7 +202,7 @@ else
 				exit 1
 			}
 	;;
-	-h | -H)
+	-h | -H | -l | -L)
 		Shell_Helper
 	;;
 	-g | -G)
@@ -222,18 +220,20 @@ fi
 [[ -z ${Github} ]] && TIME r "Github地址获取失败,请检查/bin/openwrt_info文件的值!" && exit 1
 TIME g "正在获取云端固件版本信息..."
 [ ! -d ${Download_Path} ] && mkdir -p ${Download_Path}
-wget -q --no-cookie --no-check-certificate -T 15 -t 4 ${Github_Tags} -O ${Download_Tags}
+wget -q --no-cookie --no-check-certificate ${Github_Tags} -O ${Download_Tags} > /dev/null 2>&1
 if [[ $? -ne 0 ]];then
-	wget -q --no-cookie --no-check-certificate -P ${Download_Path} https://pd.zwc365.com/${Github_Tagstwo} -O ${Download_Path}/Github_Tags
+	wget -q --no-cookie --no-check-certificate -P ${Download_Path} https://ghproxy.com/${Github_Tagstwo} -O ${Download_Path}/Github_Tags > /dev/null 2>&1
 	if [[ $? -ne 0 ]];then
-		wget -q --no-cookie --no-check-certificate -T 15 -t 4 -P ${Download_Path} https://ghproxy.com/${Github_Tagstwo} -O ${Download_Path}/Github_Tags
+		wget -q --no-cookie --no-check-certificate -T 15 -t 4 -P ${Download_Path} https://pd.zwc365.com/${Github_Tagstwo} -O ${Download_Path}/Github_Tags > /dev/null 2>&1
 	fi
 	if [[ $? -ne 0 ]];then
-		TIME r "获取固件版本信息失败,请检测网络或您的网络需要翻墙,或者您更改的Github地址为无效地址!"
+		TIME r "获取固件版本信息失败,请检测网络,或者您更改的Github地址为无效地址,或者您的仓库是私库!"
 		echo
 		exit 1
 	fi
 fi
+export CLOUD_Name="$(egrep -o "${LUCI_Name}-${CURRENT_Version}${BOOT_Type}-[a-zA-Z0-9]+${Firmware_SFX}" ${Download_Tags} | awk 'END {print}')"
+[[ ! -f /etc/CLOUD_Name ]] && echo "${CLOUD_Name}" > /etc/CLOUD_Name
 TIME g "正在比对云端固件和本地安装固件版本..."
 export CLOUD_Firmware="$(egrep -o "${Egrep_Firmware}-[0-9]+${BOOT_Type}-[a-zA-Z0-9]+${Firmware_SFX}" ${Download_Tags} | awk 'END {print}')"
 export CLOUD_sion="$(echo ${CLOUD_Firmware} | egrep -o "${REPO_Name}-${DEFAULT_Device}-[0-9]+")"
@@ -249,12 +249,9 @@ export CLOUD_Version="$(echo ${CLOUD_Firmware} | egrep -o "${REPO_Name}-${DEFAUL
 }
 export Firmware_Name="$(echo ${CLOUD_Firmware} | egrep -o "${Egrep_Firmware}-[0-9]+${BOOT_Type}-[a-zA-Z0-9]+")"
 export Firmware="${CLOUD_Firmware}"
-if [[ `grep -c "api.github.com" ${Download_Tags}` -eq '0' ]]; then
-	let CLOUD_Firmware_Size=$(grep "${Firmware}" ${Download_Tags} | cut -d M -f 1)
-else
-	let X=$(grep -n "${Firmware}" ${Download_Tags} | tail -1 | cut -d : -f 1)-4
-	let CLOUD_Firmware_Size=$(sed -n "${X}p" ${Download_Tags} | egrep -o "[0-9]+" | awk '{print ($1)/1048576}' | awk -F. '{print $1}')+1
-fi
+export CLOUD_Name="$(egrep -o "${LUCI_Name}-${CURRENT_Version}${BOOT_Type}-[a-zA-Z0-9]+${Firmware_SFX}" ${Download_Tags} | awk 'END {print}')"
+let X=$(grep -n "${Firmware}" ${Download_Tags} | tail -1 | cut -d : -f 1)-4
+let CLOUD_Firmware_Size=$(sed -n "${X}p" ${Download_Tags} | egrep -o "[0-9]+" | awk '{print ($1)/1048576}' | awk -F. '{print $1}')+1
 echo -e "\n本地版本：${CURRENT_Ver}"
 echo "云端版本：${CLOUD_Version}"	
 [[ "${TMP_Available}" -lt "${CLOUD_Firmware_Size}" ]] && {
@@ -300,12 +297,13 @@ echo "固件格式：${Firmware_SFX}"
 }
 echo "固件名称：${Firmware}"
 echo "下载保存：${Download_Path}"
+echo "固件体积：${CLOUD_Firmware_Size}M"
 sleep 1
 cd ${Download_Path}
 TIME g "正在下载云端固件,请耐心等待..."
-wget -q --no-cookie --no-check-certificate -T 15 -t 4 "https://pd.zwc365.com/${Github_Release}/${Firmware}" -O ${Firmware}
+wget -q --no-cookie --no-check-certificate -T 15 -t 4 "https://ghproxy.com/${Github_Release}/${Firmware}" -O ${Firmware}
 if [[ $? -ne 0 ]];then
-	wget -q --no-cookie --no-check-certificate -T 15 -t 4 "https://ghproxy.com/${Github_Release}/${Firmware}" -O ${Firmware}
+	wget -q --no-cookie --no-check-certificate -T 15 -t 4 "https://pd.zwc365.com/${Github_Release}/${Firmware}" -O ${Firmware}
 	if [[ $? -ne 0 ]];then
 		TIME r "下载云端固件失败,请尝试手动安装!"
 		echo
@@ -316,11 +314,11 @@ if [[ $? -ne 0 ]];then
 else
 	TIME y "下载云端固件成功!"
 fi
-CLOUD_MD5=$(md5sum ${Firmware} | cut -c1-3)
-CLOUD_256=$(sha256sum ${Firmware} | cut -c1-3)
-MD5_256=$(echo ${Firmware} | egrep -o "[a-zA-Z0-9]+${Firmware_SFX}" | sed -r "s/(.*)${Firmware_SFX}/\1/")
-CURRENT_MD5="$(echo "${MD5_256}" | cut -c1-3)"
-CURRENT_256="$(echo "${MD5_256}" | cut -c 4-)"
+export CLOUD_MD5=$(md5sum ${Firmware} | cut -c1-3)
+export CLOUD_256=$(sha256sum ${Firmware} | cut -c1-3)
+export MD5_256=$(echo ${Firmware} | egrep -o "[a-zA-Z0-9]+${Firmware_SFX}" | sed -r "s/(.*)${Firmware_SFX}/\1/")
+export CURRENT_MD5="$(echo "${MD5_256}" | cut -c1-3)"
+export CURRENT_256="$(echo "${MD5_256}" | cut -c 4-)"
 [[ ${CURRENT_MD5} != ${CLOUD_MD5} ]] && {
 	TIME r "MD5对比失败,固件可能在下载时损坏,请检查网络后重试!"
 	exit 1
