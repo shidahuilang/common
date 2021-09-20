@@ -1,6 +1,6 @@
 #!/bin/bash
-# https://github.com/281677160/AutoBuild-OpenWrt
-# common Module by 28677160
+# https://github.com/shidahuilang/langlang
+# common Module by 大灰狼
 # matrix.target=${Modelfile}
 
 TIME() {
@@ -97,11 +97,11 @@ find . -name 'luci-app-wrtbwmon' -o -name 'wrtbwmon' | xargs -i rm -rf {}
 # 全部作者源码公共diy.sh文件
 ################################################################################################################
 Diy_all() {
-git clone --depth 1 -b "${REPO_BRANCH}" https://github.com/281677160/openwrt-package
+git clone --depth 1 -b "${REPO_BRANCH}" https://github.com/shidahuilang/openwrt-package
 cp -Rf openwrt-package/* "${Home}" && rm -rf "${Home}"/openwrt-package
 
 if [[ ${REGULAR_UPDATE} == "true" ]]; then
-	git clone https://github.com/281677160/luci-app-autoupdate feeds/luci/applications/luci-app-autoupdate
+	git clone https://github.com/shidahuilang/luci-app-autoupdate feeds/luci/applications/luci-app-autoupdate
 	cp -Rf "${PATH1}"/{AutoUpdate.sh,replace.sh} package/base-files/files/bin
 fi
 if [[ "${REPO_BRANCH}" == "master" ]]; then
