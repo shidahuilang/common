@@ -77,7 +77,7 @@ rm -rf feeds/packages/libs/libcap
 git clone https://github.com/xiaorouji/openwrt-passwall package/luci-app-passwall
 rm -rf package/luci-app-passwall/{v2ray-core,v2ray-plugin,xray-core,xray-plugin}
 # git clone https://github.com/fw876/helloworld package/luci-app-ssr-plus
-git clone https://github.com/shidahuilang/ssr package/luci-app-ssr-plus
+git clone https://github.com/281677160/ssr package/luci-app-ssr-plus
 
 sed -i 's/DEFAULT_PACKAGES +=/DEFAULT_PACKAGES += luci-app-passwall/g' target/linux/x86/Makefile
 sed -i "/exit 0/i\chmod +x /etc/webweb.sh && source /etc/webweb.sh" $ZZZ
@@ -502,10 +502,11 @@ GONGGAO() {
 }
 
 Diy_gonggao() {
-GONGGAO g "《Lede_source文件，Luci版本为18.06，内核版本为5.4》"
-GONGGAO g "《Lienol_source文件，Luci版本为17.01，内核版本为4.14》"
-GONGGAO g "《Mortal_source文件，Luci版本为21.02，内核版本为5.4》"
-GONGGAO g "《openwrt_amlogic文件，编译N1和晶晨系列盒子专用，Luci版本为18.06，内核版本为5.4》"
+GONGGAO y "《Lede_source文件，Luci版本为18.06，内核版本为5.4》"
+GONGGAO y "《Lienol_source文件，Luci版本为17.01，内核版本为4.14》"
+GONGGAO y "《Mortal_source文件，Luci版本为21.02，内核版本为5.4》"
+GONGGAO y "《openwrt_amlogic文件，编译N1和晶晨系列盒子专用，Luci版本为18.06，内核版本为5.4》"
+
 echo
 echo
 }
@@ -608,7 +609,6 @@ TIME z "  本服务器的CPU型号为[ ${CPUNAME} ]"
 echo
 TIME z "  在此系统上使用核心数为[ ${CPUCORES} ],线程数为[ $(nproc) ]"
 echo
-
 echo
 TIME z "  下面将使用[ $(nproc)线程 ]编译固件"
 if [ -n "$(ls -A "${Home}/EXT4" 2>/dev/null)" ]; then
@@ -624,10 +624,10 @@ if [ -n "$(ls -A "${Home}/Chajianlibiao" 2>/dev/null)" ]; then
 	chmod -R +x ${Home}/CHONGTU
 	source ${Home}/CHONGTU
 	rm -rf {CHONGTU,Chajianlibiao}
+	echo
+	echo
 fi
 if [ -n "$(ls -A "${Home}/Plug-in" 2>/dev/null)" ]; then
-	echo
-	echo
 	TIME r "	      已选插件列表"
 	chmod -R +x ${Home}/Plug-in
 	source ${Home}/Plug-in
