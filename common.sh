@@ -1,5 +1,7 @@
 #!/bin/bash
-
+# https://github.com/shidahuilang/AutoBuild-OpenWrt
+# common Module by 28677160
+# matrix.target=${Modelfile}
 
 TIME() {
 Compte=$(date +%Y年%m月%d号%H时%M分)
@@ -76,7 +78,8 @@ find . -name 'UnblockNeteaseMusic-Go' -o -name 'UnblockNeteaseMusic' -o -name 'l
 rm -rf feeds/packages/libs/libcap
 git clone https://github.com/xiaorouji/openwrt-passwall package/luci-app-passwall
 rm -rf package/luci-app-passwall/{v2ray-core,v2ray-plugin,xray-core,xray-plugin}
-git clone https://github.com/281677160/ssr package/luci-app-ssr-plus
+# git clone https://github.com/fw876/helloworld package/luci-app-ssr-plus
+git clone https://github.com/shidahuilang/ssr package/luci-app-ssr-plus
 
 sed -i 's/DEFAULT_PACKAGES +=/DEFAULT_PACKAGES += luci-app-passwall/g' target/linux/x86/Makefile
 sed -i "/exit 0/i\chmod +x /etc/webweb.sh && source /etc/webweb.sh" $ZZZ
@@ -98,9 +101,7 @@ find . -name 'luci-app-wrtbwmon' -o -name 'wrtbwmon' -o -name 'luci-app-wol' | x
 # 天灵源码21.02 diy.sh文件
 ################################################################################################################
 Diy_mortal() {
-
-find . -name 'luci-app-argon-config' -o -name 'luci-theme-argon' -o -name 'luci-light' | xargs -i rm -rf {}
-find . -name 'luci-app-netdata' -o -name 'netdata' -o -name 'luci-theme-openwrt' -o -name 'luci-app-cifs' | xargs -i rm -rf {}
+find . -name 'luci-app-netdata' -o -name 'netdata' -o -name 'luci-app-cifs' | xargs -i rm -rf {}
 find . -name 'luci-app-wrtbwmon' -o -name 'wrtbwmon' | xargs -i rm -rf {}
 }
 
@@ -128,11 +129,7 @@ elif [[ "${REPO_BRANCH}" == "openwrt-18.06" ]]; then
 	cp -Rf "${Home}"/build/common/TIANLING/files "${Home}"
 	cp -Rf "${Home}"/build/common/TIANLING/diy/* "${Home}"
 	cp -Rf "${Home}"/build/common/TIANLING/patches/* "${PATH1}/patches"
-	rm -rf package/emortal/default-settings
-	svn co https://github.com/Lienol/openwrt/trunk/package/default-settings package/emortal/default-settings
-	chmod 775 ${Home}/build/common/Convert/1806zzz-default-settings
-	cp -Rf ${Home}/build/common/Convert/1806zzz-default-settings package/emortal/default-settings/files/zzz-default-settings
-	rm -rf package/emortal/default-settings/.svn
+	curl -fsSL https://raw.githubusercontent.com/shidahuilang/common/main/Convert/1806-default-settings > ${Home}/package/emortal/default-settings/files/99-default-settings
 elif [[ "${REPO_BRANCH}" == "openwrt-21.02" ]]; then
 	cp -Rf "${Home}"/build/common/MORTAL/files "${Home}"
 	cp -Rf "${Home}"/build/common/MORTAL/diy/* "${Home}"
@@ -240,7 +237,6 @@ if [[ `grep -c "CONFIG_PACKAGE_luci-app-docker=y" ${Home}/.config` -eq '1' ]]; t
 		echo "TIME z \"\"" >>CHONGTU
 		echo "TIME b \"插件冲突信息\"" > ${Home}/Chajianlibiao
 	fi
-	
 fi
 if [[ `grep -c "CONFIG_PACKAGE_luci-app-advanced=y" ${Home}/.config` -eq '1' ]]; then
 	if [[ `grep -c "CONFIG_PACKAGE_luci-app-fileassistant=y" ${Home}/.config` -eq '1' ]]; then
@@ -249,7 +245,6 @@ if [[ `grep -c "CONFIG_PACKAGE_luci-app-advanced=y" ${Home}/.config` -eq '1' ]];
 		echo "TIME z \"\"" >>CHONGTU
 		echo "TIME b \"插件冲突信息\"" > ${Home}/Chajianlibiao
 	fi
-	
 fi
 if [[ `grep -c "CONFIG_PACKAGE_luci-app-adblock-plus=y" ${Home}/.config` -eq '1' ]]; then
 	if [[ `grep -c "CONFIG_PACKAGE_luci-app-adblock=y" ${Home}/.config` -eq '1' ]]; then
@@ -260,7 +255,6 @@ if [[ `grep -c "CONFIG_PACKAGE_luci-app-adblock-plus=y" ${Home}/.config` -eq '1'
 		echo "TIME z \"\"" >>CHONGTU
 		echo "TIME b \"插件冲突信息\"" > ${Home}/Chajianlibiao
 	fi
-	
 fi
 if [[ `grep -c "CONFIG_PACKAGE_luci-app-kodexplorer=y" ${Home}/.config` -eq '1' ]]; then
 	if [[ `grep -c "CONFIG_PACKAGE_luci-app-vnstat=y" ${Home}/.config` -eq '1' ]]; then
@@ -273,7 +267,6 @@ if [[ `grep -c "CONFIG_PACKAGE_luci-app-kodexplorer=y" ${Home}/.config` -eq '1' 
 		echo "TIME z \"\"" >>CHONGTU
 		echo "TIME b \"插件冲突信息\"" > ${Home}/Chajianlibiao
 	fi
-	
 fi
 if [[ `grep -c "CONFIG_PACKAGE_luci-app-ssr-plus=y" ${Home}/.config` -ge '1' ]]; then
 	if [[ `grep -c "CONFIG_PACKAGE_luci-app-cshark=y" ${Home}/.config` -eq '1' ]]; then
@@ -284,13 +277,11 @@ if [[ `grep -c "CONFIG_PACKAGE_luci-app-ssr-plus=y" ${Home}/.config` -ge '1' ]];
 		echo "TIME z \"\"" >>CHONGTU
 		echo "TIME b \"插件冲突信息\"" > ${Home}/Chajianlibiao
 	fi
-	
 fi
 if [[ `grep -c "CONFIG_PACKAGE_wpad-openssl=y" ${Home}/.config` -eq '1' ]]; then
 	if [[ `grep -c "CONFIG_PACKAGE_wpad=y" ${Home}/.config` -eq '1' ]]; then
 		sed -i 's/CONFIG_PACKAGE_wpad=y/# CONFIG_PACKAGE_wpad is not set/g' ${Home}/.config
 	fi
-
 fi
 if [[ `grep -c "CONFIG_PACKAGE_dnsmasq-full=y" ${Home}/.config` -eq '1' ]]; then
 	if [[ `grep -c "CONFIG_PACKAGE_dnsmasq=y" ${Home}/.config` -eq '1' ]] || [[ `grep -c "CONFIG_PACKAGE_dnsmasq-dhcpv6=y" ${Home}/.config` -eq '1' ]]; then
@@ -311,7 +302,6 @@ if [[ `grep -c "CONFIG_PACKAGE_luci-app-samba4=y" ${Home}/.config` -eq '1' ]]; t
 		echo "TIME z \"\"" >>CHONGTU
 		echo "TIME b \"插件冲突信息\"" > ${Home}/Chajianlibiao
 	fi
-	
 fi
 if [[ `grep -c "CONFIG_PACKAGE_luci-theme-argon=y" ${Home}/.config` -eq '1' ]]; then
 	if [[ `grep -c "CONFIG_PACKAGE_luci-theme-argon_new=y" ${Home}/.config` -eq '1' ]]; then
@@ -320,7 +310,6 @@ if [[ `grep -c "CONFIG_PACKAGE_luci-theme-argon=y" ${Home}/.config` -eq '1' ]]; 
 		echo "TIME z \"\"" >>CHONGTU
 		echo "TIME b \"插件冲突信息\"" > ${Home}/Chajianlibiao
 	fi
-
 fi
 if [[ `grep -c "CONFIG_PACKAGE_luci-app-sfe=y" ${Home}/.config` -eq '1' ]]; then
 	if [[ `grep -c "CONFIG_PACKAGE_luci-app-flowoffload=y" ${Home}/.config` -eq '1' ]]; then
@@ -353,8 +342,7 @@ if [[ `grep -c "CONFIG_PACKAGE_luci-app-unblockneteasemusic=y" ${Home}/.config` 
 		echo "TIME r \"您选择了luci-app-unblockmusic，会和luci-app-unblockneteasemusic冲突导致编译错误，已删除luci-app-unblockmusic\"" >>CHONGTU
 		echo "TIME z \"\"" >>CHONGTU
 		echo "TIME b \"插件冲突信息\"" > ${Home}/Chajianlibiao
-	fi	
-
+	fi
 fi
 if [[ `grep -c "CONFIG_PACKAGE_luci-i18n-qbittorrent-zh-cn=y" ${Home}/.config` -eq '0' ]]; then
 	sed -i 's/CONFIG_PACKAGE_luci-app-qbittorrent_static=y/# CONFIG_PACKAGE_luci-app-qbittorrent_static is not set/g' ${Home}/.config
@@ -362,6 +350,12 @@ if [[ `grep -c "CONFIG_PACKAGE_luci-i18n-qbittorrent-zh-cn=y" ${Home}/.config` -
 	sed -i 's/CONFIG_PACKAGE_luci-app-qbittorrent_dynamic=y/# CONFIG_PACKAGE_luci-app-qbittorrent_dynamic is not set/g' ${Home}/.config
 	sed -i 's/CONFIG_PACKAGE_qBittorrent-static=y/# CONFIG_PACKAGE_qBittorrent-static is not set/g' ${Home}/.config
 	sed -i 's/CONFIG_PACKAGE_qbittorrent=y/# CONFIG_PACKAGE_qbittorrent is not set/g' ${Home}/.config
+fi
+if [[ `grep -c "CONFIG_PACKAGE_luci-theme-argon=y" ${Home}/.config` -eq '1' ]]; then
+	if [[ `grep -c "CONFIG_PACKAGE_luci-app-argon-config=y" ${Home}/.config` == '0' ]]; then
+		sed -i '/luci-app-argon-config/d' ${Home}/.config
+		echo -e "\nCONFIG_PACKAGE_luci-theme-argon=y" >> ${Home}/.config
+	fi
 fi
 if [[ `grep -c "CONFIG_TARGET_ROOTFS_EXT4FS=y" ${Home}/.config` -eq '1' ]]; then
 	if [[ `grep -c "CONFIG_TARGET_ROOTFS_PARTSIZE" ${Home}/.config` -eq '0' ]]; then
@@ -418,7 +412,7 @@ if [[ "${REPO_BRANCH}" == "19.07" ]] || [[ "${REPO_BRANCH}" == "master" ]]; then
 fi
 
 if [[ `grep -c "CONFIG_PACKAGE_ntfs-3g=y" ${Home}/.config` -eq '1' ]]; then
-	mkdir -p files/etc/hotplug.d/block && curl -fsSL  https://raw.githubusercontent.com/281677160/openwrt-package/usb/block/10-mount > files/etc/hotplug.d/block/10-mount
+	mkdir -p files/etc/hotplug.d/block && curl -fsSL  https://raw.githubusercontent.com/shidahuilang/openwrt-package/usb/block/10-mount > files/etc/hotplug.d/block/10-mount
 fi
 
 
@@ -451,9 +445,7 @@ if [[ "${BY_INFORMATION}" == "true" ]]; then
 	grep -i CONFIG_PACKAGE_luci-app .config | grep  -v \# > Plug-in
 	grep -i CONFIG_PACKAGE_luci-theme .config | grep  -v \# >> Plug-in
 	if [[ `grep -c "CONFIG_PACKAGE_luci-i18n-qbittorrent-zh-cn=y" ${Home}/.config` -eq '0' ]]; then
-		if [[ `grep -c "luci-app-qbittorrent_static" ${Home}/Plug-in` -eq '1' ]] || [[ `grep -c "luci-app-qbittorrent_dynamic" ${Home}/Plug-in` -eq '1' ]]; then
-			sed -i '/qbittorrent/d' Plug-in
-		fi
+		sed -i '/qbittorrent/d' Plug-in
 	fi
 	sed -i '/INCLUDE/d' Plug-in > /dev/null 2>&1
 	sed -i '/=m/d' Plug-in > /dev/null 2>&1
@@ -462,22 +454,15 @@ if [[ "${BY_INFORMATION}" == "true" ]]; then
 	awk '$0=NR$0' Plug-in > Plug-2
 	awk '{print "	" $0}' Plug-2 > Plug-in
 	sed -i "s/^/TIME g \"/g" Plug-in
-	cat /proc/cpuinfo | grep name | cut -f2 -d: | uniq -c > CPU
-	cat /proc/cpuinfo | grep "cpu cores" | uniq >> CPU
-	sed -i 's|[[:space:]]||g; s|^.||' CPU && sed -i 's|CPU||g; s|pucores:||' CPU
-	CPUNAME="$(awk 'NR==1' CPU)" && CPUCORES="$(awk 'NR==2' CPU)"
-	rm -rf CPU
 
 	if [[ `grep -c "KERNEL_PATCHVER:=" ${Home}/target/linux/${TARGET_BOARD}/Makefile` -eq '1' ]]; then
-		PATCHVER=$(grep KERNEL_PATCHVER:= ${Home}/target/linux/${TARGET_BOARD}/Makefile | cut -c18-100)
+		PATCHVE="$(egrep -o 'KERNEL_PATCHVER:=[0-9]+\.[0-9]+' ${Home}/target/linux/${TARGET_BOARD}/Makefile |cut -d "=" -f2)"
 	elif [[ `grep -c "KERNEL_PATCHVER=" ${Home}/target/linux/${TARGET_BOARD}/Makefile` -eq '1' ]]; then
-		PATCHVER=$(grep KERNEL_PATCHVER= ${Home}/target/linux/${TARGET_BOARD}/Makefile | cut -c17-100)
+		PATCHVE="$(egrep -o 'KERNEL_PATCHVER=[0-9]+\.[0-9]+' ${Home}/target/linux/${TARGET_BOARD}/Makefile |cut -d "=" -f2)"
 	else
 		PATCHVER="unknown"
 	fi
-	if [[ ! "${PATCHVER}" == "unknown" ]]; then
-		PATCHVER=$(egrep -o "${PATCHVER}.[0-9]+" ${Home}/include/kernel-version.mk)
-	fi
+	[[ -n ${PATCHVE} ]] && PATCHVER=$(egrep -o "${PATCHVE}.[0-9]+" ${Home}/include/kernel-version.mk)
 	
 	if [[ "${Modelfile}" == "openwrt_amlogic" ]]; then
 		[[ -e $GITHUB_WORKSPACE/amlogic_openwrt ]] && source $GITHUB_WORKSPACE/amlogic_openwrt
@@ -490,13 +475,6 @@ if [[ "${BY_INFORMATION}" == "true" ]]; then
 			TARGET_kernel="${amlogic_kernel}"
 			TARGET_model="${amlogic_model}"
 		}
-	fi
-	if [[ `grep -c "KERNEL_PATCHVER:=" ${Home}/target/linux/${TARGET_BOARD}/Makefile` -eq '1' ]]; then
-		PATCHVER="$(grep 'KERNEL_PATCHVER:=' ${Home}/target/linux/${TARGET_BOARD}/Makefile | cut -d "=" -f2)"
-	elif [[ `grep -c "KERNEL_PATCHVER=" ${Home}/target/linux/${TARGET_BOARD}/Makefile` -eq '1' ]]; then
-		PATCHVER="$(grep 'KERNEL_PATCHVER:=' ${Home}/target/linux/${TARGET_BOARD}/Makefile | cut -d "=" -f2)"
-	else
-		PATCHVER="unknown"
 	fi
 fi
 rm -rf ${Home}/files/{README,README.md}
@@ -529,12 +507,10 @@ echo
 echo
 }
 
-
 ################################################################################################################
 # 编译信息
 ################################################################################################################
-Diy_xinxi_Base() {
-GET_TARGET_INFO
+Diy_xinxi() {
 if [[ "${TARGET_PROFILE}" =~ (friendlyarm_nanopi-r2s|friendlyarm_nanopi-r4s|armvirt) ]]; then
 	REGULAR_UPDATE="false"
 fi
@@ -543,7 +519,7 @@ TIME b "编译源码: ${CODE}"
 TIME b "源码链接: ${REPO_URL}"
 TIME b "源码分支: ${REPO_BRANCH}"
 TIME b "源码作者: ${ZUOZHE}"
-TIME b "默认内核: ${PATCHVER}"
+TIME b "内核版本: ${PATCHVER}"
 TIME b "Luci版本: ${OpenWrt_name}"
 [[ "${Modelfile}" == "openwrt_amlogic" ]] && {
 	TIME b "编译机型: ${TARGET_model}"
@@ -592,16 +568,8 @@ if [[ ${SERVERCHAN_SCKEY} == "true" ]]; then
 else
 	TIME r "微信/电报通知: 关闭"
 fi
-if [[ ${SSH_ACTIONS} == "true" ]]; then
-	TIME y "SSH远程连接: 开启"
-else
-	TIME r "SSH远程连接: 关闭"
-fi
 if [[ ${BY_INFORMATION} == "true" ]]; then
 	TIME y "编译信息显示: 开启"
-fi
-if [[ ${SSHYC} == "true" ]]; then
-	TIME y "SSH远程连接临时开关: 开启"
 fi
 if [[ ${REGULAR_UPDATE} == "true" ]]; then
 	TIME y "把定时自动更新插件编译进固件: 开启"
@@ -622,7 +590,8 @@ if [[ ${REGULAR_UPDATE} == "true" ]]; then
 	fi
 	TIME b "固件版本: ${Openwrt_Version}"
 	TIME b "云端路径: ${Github_UP_RELEASE}"
-	TIME g "《编译成功，会自动把固件发布到指定地址，然后才会生成云端路径》"
+	TIME g "《编译成功后，会自动把固件发布到指定地址，然后才会生成云端路径》"
+	TIME g "《普通的那个发布固件跟云端的发布路径是两码事，如果你不需要普通发布的可以不用打开发布功能》"
 	echo
 else
 	echo
