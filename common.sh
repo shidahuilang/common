@@ -1,7 +1,5 @@
 #!/bin/bash
-# https://github.com/shidahuilang/AutoBuild-OpenWrt
-# common Module by 28677160
-# matrix.target=${Modelfile}
+
 
 TIME() {
 Compte=$(date +%Y年%m月%d号%H时%M分)
