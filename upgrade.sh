@@ -13,8 +13,8 @@ GET_TARGET_INFO() {
 		REPO_Name="lede"
 		ZUOZHE="Lean's"
 		if [[ "${TARGET_PROFILE}" == "x86-64" ]]; then
-			Legacy_Firmware="Lede--x86-64-generic-squashfs-combined.${Firmware_sfxo}"
-			UEFI_Firmware="Lede--x86-64-generic-squashfs-combined-efi.${Firmware_sfxo}"
+			Legacy_Firmware="Lede-x86-64-generic-squashfs-combined.${Firmware_sfxo}"
+			UEFI_Firmware="Lede-x86-64-generic-squashfs-combined-efi.${Firmware_sfxo}"
 			Firmware_sfx="${Firmware_sfxo}"
 		elif [[ "${TARGET_PROFILE}" == "phicomm_k3" ]]; then
 			Up_Firmware="openwrt-bcm53xx-generic-${TARGET_PROFILE}-squashfs.trx"
