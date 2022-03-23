@@ -7,7 +7,7 @@ GET_TARGET_INFO() {
 	[[ ${TARGET_PROFILE} == x86-64 ]] && {
 		[[ `grep -c "CONFIG_TARGET_IMAGES_GZIP=y" ${Home}/.config` -ge '1' ]] && Firmware_sfxo=img.gz || Firmware_sfxo=img 
 	}
-	[[ ${TARGET_PROFILE} == rockchip_armv8_DEVICE_friendlyarm_nanopi-r2s ]] && {
+	[[ ${TARGET_PROFILE} == rockchip_armv8 ]] && {
 		[[ `grep -c "CONFIG_TARGET_IMAGES_GZIP=y" ${Home}/.config` -ge '1' ]] && Firmware_sfxo=img.gz || Firmware_sfxo=img 
 	}
 	case "${REPO_BRANCH}" in
