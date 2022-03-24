@@ -145,7 +145,7 @@ esac
 echo "
 src-git helloworld https://github.com/fw876/helloworld
 src-git passwall https://github.com/shidahuilang/openwrt-passwall
-src-git danshui https://github.com/shidahuilang/openwrt-package.git;${REPO_BRANCH}
+src-git dahuilang https://github.com/shidahuilang/openwrt-package.git;${REPO_BRANCH}
 " >> $HOME_PATH/feeds.conf.default
 }
 
@@ -153,7 +153,9 @@ src-git danshui https://github.com/shidahuilang/openwrt-package.git;${REPO_BRANC
 function sbin_openwrt() {
 echo "给固件增加[openwrt]命令"
 [[ -f $BUILD_PATH/openwrt.sh ]] && cp -Rf $BUILD_PATH/openwrt.sh $BASE_PATH/sbin/openwrt
+[[ -f $BUILD_PATH/tools.sh ]] && cp -Rf $BUILD_PATH/tools.sh $BASE_PATH/sbin/tools
 chmod 777 $BASE_PATH/sbin/openwrt
+chmod 777 $BASE_PATH/sbin/tools
 }
 
 
