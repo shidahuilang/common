@@ -46,6 +46,7 @@ function GET_TARGET_INFO() {
 		export Firmware_sfx="img.gz"
 		export Legacy_Firmware="openwrt-${TARGET_PROFILE}-generic-squashfs-combined.${Firmware_sfx}"
 		export UEFI_Firmware="openwrt-${TARGET_PROFILE}-generic-squashfs-combined-efi.${Firmware_sfx}"
+		export EXT4_Firmware="openwrt-${TARGET_PROFILE}-ext4-sysupgrade.${Firmware_sfx}"
 	;;
 	mvebu)
 		case "${TARGET_SUBTARGET}" in
