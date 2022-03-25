@@ -5,7 +5,7 @@
 
 
 function Diy_Part1() {
-  [[ ! -d "$HOME_PATH/package/luci-app-autoupdate" ]] && git clone https://github.com/281677160/luci-app-autoupdate $HOME_PATH/package/luci-app-autoupdate
+  [[ ! -d "$HOME_PATH/package/luci-app-autoupdate" ]] && git clone https://github.com/shidahuilang/luci-app-autoupdate $HOME_PATH/package/luci-app-autoupdate
   [[ -f "$BUILD_PATH/AutoUpdate.sh" ]] && cp -Rf $BUILD_PATH/AutoUpdate.sh $BASE_PATH/bin/AutoUpdate.sh
   [[ -f "$BUILD_PATH/replace.sh" ]] && cp -Rf $BUILD_PATH/replace.sh $BASE_PATH/bin/replace.sh
   sed  -i  's/ luci-app-ttyd//g' $HOME_PATH/target/linux/*/Makefile
@@ -14,16 +14,13 @@ function Diy_Part1() {
 }
 
 function GET_TARGET_INFO() {
-	source $BUILD_PATH/ceshi777.sh && Make_upgrade
+	source $BUILD_PATH/common.sh && Make_upgrade
 	if [[ "${TARGET_PROFILE}" =~ (phicomm_k3|phicomm-k3) ]]; then
 		export Rename="${TARGET_PROFILE}"
 		export TARGET_PROFILE="phicomm_k3"
 	elif [[ "${TARGET_PROFILE}" =~ (k2p|phicomm_k2p|phicomm-k2p) ]]; then
 		export Rename="${TARGET_PROFILE}"
 		export TARGET_PROFILE="phicomm_k2p"
-	elif [[ "${TARGET_PROFILE}" =~ (r2s|friendlyarm_nanopi-r2s|nanopi-r2s|friendlyarm_nanopi_r2s) ]]; then
-		export Rename="${TARGET_PROFILE}"
-		export TARGET_PROFILE="friendlyarm_nanopi-r2s"
 	elif [[ "${TARGET_PROFILE}" =~ (xiaomi_mi-router-3g-v2|xiaomi_mir3g_v2) ]]; then
 		export Rename="${TARGET_PROFILE}"
 		export TARGET_PROFILE="xiaomi_mir3g-v2"
@@ -46,7 +43,6 @@ function GET_TARGET_INFO() {
 		export Firmware_sfx="img.gz"
 		export Legacy_Firmware="openwrt-${TARGET_PROFILE}-generic-squashfs-combined.${Firmware_sfx}"
 		export UEFI_Firmware="openwrt-${TARGET_PROFILE}-generic-squashfs-combined-efi.${Firmware_sfx}"
-		export EXT4_Firmware="openwrt-${TARGET_PROFILE}-ext4-sysupgrade.${Firmware_sfx}"
 	;;
 	mvebu)
 		case "${TARGET_SUBTARGET}" in
@@ -87,24 +83,24 @@ function GET_TARGET_INFO() {
 function Diy_Part2() {
 	GET_TARGET_INFO
 	cat >${In_Firmware_Info} <<-EOF
-	Github="${Github}"
-	Author="${Author}"
-	Library="${Library}"
-	Warehouse="${Warehouse}"
-	SOURCE="${SOURCE}"
-	LUCI_EDITION="${LUCI_EDITION}"
-	DEFAULT_Device="${TARGET_PROFILE}"
-	Firmware_SFX=".${Firmware_sfx}"
-	CURRENT_Version="${Openwrt_Version}"
-	LOCAL_CHAZHAO="${LOCAL_CHAZHAO}"
-	CLOUD_CHAZHAO="${CLOUD_CHAZHAO}"
-	Download_Path="/tmp/Downloads"
-	Version="${AutoUpdate_Version}"
-	API_PATH="/tmp/Downloads/Github_Tags"
-	Github_API1="${Github_API1}"
-	Github_API2="${Github_API2}"
-	Github_Release="${Github_Release}"
-	Release_download="${Release_download}"
+	Github=${Github}
+	Author=${Author}
+	Library=${Library}
+	Warehouse=${Warehouse}
+	SOURCE=${SOURCE}
+	LUCI_EDITION=${LUCI_EDITION}
+	DEFAULT_Device=${TARGET_PROFILE}
+	Firmware_SFX=.${Firmware_sfx}
+	CURRENT_Version=${Openwrt_Version}
+	LOCAL_CHAZHAO=${LOCAL_CHAZHAO}
+	CLOUD_CHAZHAO=${CLOUD_CHAZHAO}
+	Download_Path=/tmp/Downloads
+	Version=${AutoUpdate_Version}
+	API_PATH="/tmp/Downloads/Github_Tags
+	Github_API1=${Github_API1}
+	Github_API2=${Github_API2}
+	Github_Release=${Github_Release}
+	Release_download=${Release_download}
 	EOF
 }
 
