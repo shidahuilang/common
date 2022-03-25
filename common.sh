@@ -145,7 +145,7 @@ esac
 echo "
 src-git helloworld https://github.com/fw876/helloworld
 src-git passwall https://github.com/shidahuilang/openwrt-passwall
-src-git danshui https://github.com/281677160/openwrt-package.git;${REPO_BRANCH}
+src-git dahuilang https://github.com/shidahuilang/openwrt-package.git;${REPO_BRANCH}
 " >> $HOME_PATH/feeds.conf.default
 }
 
