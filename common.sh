@@ -145,7 +145,7 @@ esac
 echo "
 src-git helloworld https://github.com/fw876/helloworld
 src-git passwall https://github.com/shidahuilang/openwrt-passwall
-src-git danshui https://github.com/shidahuilang/openwrt-package.git;${REPO_BRANCH}
+src-git shidahuilang https://github.com/shidahuilang/openwrt-package.git;${REPO_BRANCH}
 " >> $HOME_PATH/feeds.conf.default
 }
 
@@ -153,9 +153,7 @@ src-git danshui https://github.com/shidahuilang/openwrt-package.git;${REPO_BRANC
 function sbin_openwrt() {
 echo "给固件增加[openwrt]命令"
 [[ -f $BUILD_PATH/openwrt.sh ]] && cp -Rf $BUILD_PATH/openwrt.sh $BASE_PATH/sbin/openwrt
-[[ -f $BUILD_PATH/tools.sh ]] && cp -Rf $BUILD_PATH/tools.sh $BASE_PATH/sbin/tools
 chmod 777 $BASE_PATH/sbin/openwrt
-chmod 777 $BASE_PATH/sbin/tools
 }
 
 
@@ -235,7 +233,6 @@ fi
 
 function Diy_patches() {
 echo "如果有补丁文件，给源码打补丁"
-mv $HOME_PATH/build/common/LEDE $HOME_PATH/build/common/${SOURCE}
 if [[ -d "${GITHUB_WORKSPACE}/OP_DIY" ]]; then
   cp -Rf $HOME_PATH/build/common/${SOURCE}/* $BUILD_PATH
   cp -Rf ${GITHUB_WORKSPACE}/OP_DIY/${matrixtarget}/* $BUILD_PATH
@@ -431,7 +428,7 @@ if [ -n "$(ls -A "${HOME_PATH}/Chajianlibiao" 2>/dev/null)" ]; then
 else
   rm -rf CHONGTU
 fi
-
+make defconfig > /dev/null 2>&1
 echo
 echo
 if [ -n "$(ls -A "${HOME_PATH}/EXT4" 2>/dev/null)" ]; then
@@ -715,7 +712,6 @@ TIME z "  本编译 服务器的 CPU型号为 [ ${CPUNAME} ]"
 echo
 TIME z "  使用 核心数 为 [ ${CPUCORES} ], 线程数为 [ $(nproc) ]"
 echo
-TIME z "  下面将使用 [ $(nproc) 线程 ] 编译固件"
 if [ -n "$(ls -A "${HOME_PATH}/EXT4" 2>/dev/null)" ]; then
   chmod -R +x ${HOME_PATH}/EXT4
   source ${HOME_PATH}/EXT4
@@ -761,7 +757,7 @@ Diy_amlogic
 Diy_indexhtm
 Diy_patches
 if [[ "${REGULAR_UPDATE}" == "true" ]]; then
-  source $BUILD_PATH/pvehy.sh && Diy_Part1
+  source $BUILD_PATH/upgrade.sh && Diy_Part1
 fi
 ./scripts/feeds update -a
 ./scripts/feeds install -a > /dev/null 2>&1
