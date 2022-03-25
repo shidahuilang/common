@@ -1,5 +1,4 @@
 #!/usr/bin/env bash
-
 #====================================================
 #!/bin/bash
 # https://github.com/shidahuilang/langlang
@@ -38,10 +37,14 @@ function ECHOG() {
   echo -e "${Green} $1 ${Font}"
 }
 function print_ok() {
+  echo
   echo -e " ${OK} ${Blue} $1 ${Font}"
+  echo
 }
 function print_error() {
+  echo
   echo -e "${ERROR} ${RedBG} $1 ${Font}"
+  echo
 }
 judge() {
   if [[ 0 -eq $? ]]; then
@@ -193,14 +196,100 @@ function install_bootstrap() {
   sed -i '/bootstrap/d' /etc/config/luci
   rm -rf /tmp/luci-*cache
   opkg install luci-theme-bootstrap
-  uci set luci.main.mediaurlbase='/luci-static/bootstrap'
-  uci commit luci
-  echo
-  ECHOY "正在重启openwrt，请稍等一会进入后台..."
-  echo
-  sleep 2
-  reboot -f
+  if [[ $? -ne 0 ]]; then
+    print_error "固件自带源安装主题失败，正在尝试外部源，请稍后..."
+    export Anzhuang_shibai="1"
+    sleep 2
+  else
+    export Anzhuang_shibai="0"
+    uci set luci.main.mediaurlbase='/luci-static/bootstrap'
+    uci commit luci
+    print_ok "正在重启openwrt，请稍等一会进入后台..."
+    sleep 2
+    reboot -f
+  fi
+  
+  if [[ ${Anzhuang_shibai} == "1" ]]; then
+    rm -rf /tmp/luci-theme-bootstrap.ipk
+    wget --tries=4 -q -P /tmp https://ghproxy.com/https://github.com/shidahuilang/openwrt-package/blob/usb/zhuti/luci-theme-bootstrap_18.06.ipk -O /tmp/luci-theme-bootstrap.ipk
+    if [[ $? -ne 0 ]]; then
+      wget --tries=4 -q -P /tmp https://archive.openwrt.org/releases/packages-18.06/aarch64_cortex-a72/luci/luci-theme-bootstrap_git-18.235.62437-6503756-1_all.ipk -O /tmp/luci-theme-bootstrap.ipk
+      if [[ $? -ne 0 ]]; then
+        print_error "下载主题插件失败，请检查网络"
+        exit 1
+      fi
+    fi
+    opkg remove luci-theme-bootstrap
+    opkg install /tmp/luci-theme-bootstrap.ipk
+    if [[ $? -ne 0 ]]; then
+      print_error "主题安装失败"
+      exit 1
+    else
+      print_ok "主题安装成功，正在重启openwrt，请稍后登录..."
+      uci set luci.main.mediaurlbase='/luci-static/bootstrap'
+      uci commit luci
+      reboot -f
+    fi
+  fi
 }
+
+function install_material() {
+  echo
+  ECHOY "正在安装官方主题，请耐心等候..."
+  echo
+  opkg update
+  opkg remove luci-theme-material
+  sed -i '/material/d' /etc/config/luci
+  rm -rf /tmp/luci-*cache
+  opkg install luci-theme-material
+  if [[ $? -ne 0 ]]; then
+    print_error "固件自带源安装主题失败，正在尝试外部源，请稍后..."
+    export Anzhuang_shibai="1"
+    sleep 2
+  else
+    export Anzhuang_shibai="0"
+    uci set luci.main.mediaurlbase='/luci-static/material'
+    uci commit luci
+    print_ok "正在重启openwrt，请稍等一会进入后台..."
+    sleep 2
+    reboot -f
+  fi
+  
+  if [[ ${Anzhuang_shibai} == "1" ]]; then
+    rm -rf /tmp/luci-theme-material.ipk
+    wget --tries=4 -q -P /tmp https://ghproxy.com/https://github.com/281677160/openwrt-package/blob/usb/zhuti/luci-theme-material_21.02.ipk -O /tmp/luci-theme-material.ipk
+    if [[ $? -ne 0 ]]; then
+      wget --tries=4 -q -P /tmp https://archive.openwrt.org/releases/packages-21.02/aarch64_cortex-a72/luci/luci-theme-material_git-21.295.66888-fc702bc_all.ipk -O /tmp/luci-theme-material.ipk
+        if [[ $? -ne 0 ]]; then
+          print_error "下载主题插件失败，请检查网络"
+          exit 1
+        fi
+    fi
+    opkg remove luci-theme-material
+    opkg install /tmp/luci-theme-material.ipk
+    if [[ $? -ne 0 ]]; then
+      print_error "主题安装失败"
+      exit 1
+    else
+      print_ok "主题安装成功，正在重启openwrt，请稍后登录..."
+      uci set luci.main.mediaurlbase='/luci-static/material'
+      uci commit luci
+      reboot -f
+    fi
+  fi
+}
+
+function install_zhuti() {
+  if [[ "$(. /etc/openwrt_release && echo "$DISTRIB_RECOGNIZE")" == "18" ]]; then
+    install_bootstrap
+  elif [[ "$(. /etc/openwrt_release && echo "$DISTRIB_RECOGNIZE")" == "20" ]]; then
+    install_material
+  else
+    print_error "不清楚您固件的LUCI版本，无法运行程序!"
+    exit 1
+  fi
+}
+  
 
 menu() {
   clear
@@ -259,7 +348,7 @@ menu() {
     break
     ;;
     9)
-      install_bootstrap
+      install_zhuti
     break
     ;;
     10)
@@ -305,7 +394,7 @@ menuws() {
     break
     ;;
     3)
-      install_bootstrap
+      install_zhuti
     break
     ;;
     4)
@@ -331,4 +420,3 @@ else
 fi
 
 exit 0
-
