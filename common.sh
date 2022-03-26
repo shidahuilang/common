@@ -1,5 +1,5 @@
 #!/bin/bash
-# https://github.com/shidahuilang/langlang
+# https://github.com/shidahuilang/openwrt
 # common Module by 大灰狼
 # matrix.target=${Modelfile}
 
@@ -22,13 +22,13 @@ Compte=$(date +%Y年%m月%d号%H时%M分)
     }
 }
 
-
 function Diy_variable() {
 echo "HOME_PATH=${GITHUB_WORKSPACE}/openwrt" >> $GITHUB_ENV
 echo "BUILD_PATH=${GITHUB_WORKSPACE}/openwrt/build/${matrixtarget}" >> $GITHUB_ENV
 echo "BASE_PATH=${GITHUB_WORKSPACE}/openwrt/package/base-files/files" >> $GITHUB_ENV
-echo "NETIP=package/base-files/files/etc/networkip" >> $GITHUB_ENV
-echo "DELETE=package/base-files/files/etc/deletefile" >> $GITHUB_ENV
+echo "NETIP=${GITHUB_WORKSPACE}/openwrt/package/base-files/files/etc/networkip" >> $GITHUB_ENV
+echo "DELETE=${GITHUB_WORKSPACE}/openwrt/package/base-files/files/etc/deletefile" >> $GITHUB_ENV
+echo "Convert_path=${GITHUB_WORKSPACE}/openwrt/build/common/Convert" >> $GITHUB_ENV
 echo "Upgrade_Date=$(date +%Y%m%d%H%M)" >> $GITHUB_ENV
 echo "Firmware_Date=$(date +%Y-%m%d-%H%M)" >> $GITHUB_ENV
 if [[ "${REPO_BRANCH}" == "master" ]]; then
@@ -57,9 +57,8 @@ else
 fi
 }
 
-
 function Diy_settings() {
-echo "随便判断一下是不是缺少文件了"
+echo " 正在执行：随便判断一下是不是缺少文件了"
   [[ -d "${GITHUB_WORKSPACE}/OP_DIY" ]] && {
     if [ -z "$(ls -A "${GITHUB_WORKSPACE}/OP_DIY/${matrixtarget}/${CONFIG_FILE}" 2>/dev/null)" ]; then
       TIME r "错误提示：编译脚本缺少[${CONFIG_FILE}]名称的配置文件,请在[OP_DIY/${matrixtarget}]文件夹内补齐"
@@ -67,6 +66,14 @@ echo "随便判断一下是不是缺少文件了"
     fi
     if [ -z "$(ls -A "${GITHUB_WORKSPACE}/OP_DIY/${matrixtarget}/${DIY_PART_SH}" 2>/dev/null)" ]; then
       TIME r "错误提示：编译脚本缺少[${DIY_PART_SH}]名称的自定义设置文件,请在[OP_DIY/${matrixtarget}]文件夹内补齐"
+      exit 1
+    fi
+    if [ -z "$(ls -A "${GITHUB_WORKSPACE}/OP_DIY/${matrixtarget}/${DIY_PAR2_SH}" 2>/dev/null)" ]; then
+      TIME r "错误提示：脚本有更新，OP_DIY缺少[${DIY_PAR2_SH}]，请保留你的配置文件，然后删除OP_DIY重新编译"
+      exit 1
+    fi
+    if [ -z "$(ls -A "${GITHUB_WORKSPACE}/OP_DIY/${matrixtarget}/settings.ini" 2>/dev/null)" ]; then
+      TIME r "错误提示：编译脚本缺少[settings.ini]名称的设置文件,请在[OP_DIY/${matrixtarget}]文件夹内补齐"
       exit 1
     fi
   } || {
@@ -79,12 +86,10 @@ echo "随便判断一下是不是缺少文件了"
       exit 1
     fi
   }
- 
 }
 
-
 function Diy_feeds() {
-echo "更新插件源,让源码更多插件存在"
+echo " 正在执行：更新插件源,让源码更多插件存在"
 # 拉库和做标记
 
 ./scripts/feeds clean && ./scripts/feeds update -a > /dev/null 2>&1
@@ -107,6 +112,7 @@ main)
   find . -name 'luci-app-netdata' -o -name 'netdata' -o -name 'luci-app-ttyd' | xargs -i rm -rf {}
   find . -name 'adguardhome' -o -name 'luci-app-adguardhome' -o -name 'luci-app-wol' | xargs -i rm -rf {}
   find . -name 'luci-app-wrtbwmon' -o -name 'wrtbwmon' | xargs -i rm -rf {}
+  find . -name 'luci-app-filebrowser' -o -name 'filebrowser' | xargs -i rm -rf {}
   
   # 给固件LUCI做个标记
   echo -e "\nDISTRIB_RECOGNIZE='20'" >> "$BASE_PATH/etc/openwrt_release" && sed -i '/^\s*$/d' "$BASE_PATH/etc/openwrt_release"
@@ -114,6 +120,10 @@ main)
   # 给源码增加passwall为默认自选
   sed  -i  's/ luci-app-passwall//g' target/linux/*/Makefile
   sed -i 's/DEFAULT_PACKAGES +=/DEFAULT_PACKAGES += luci-app-passwall/g' target/linux/*/Makefile
+  
+  # 修改DISTRIB_DESCRIPTION
+  DISTRIB="$(egrep -o "DISTRIB_DESCRIPTION='.* '" $ZZZ_PATH |sed -r "s/DISTRIB_DESCRIPTION='(.*) '/\1/")"
+  [[ -n "${DISTRIB}" ]] && sed -i "s/${DISTRIB}/OpenWrt/g" "$ZZZ_PATH"
 
 ;;
 openwrt-18.06)
@@ -126,6 +136,14 @@ openwrt-18.06)
   
   # 给固件LUCI做个标记
   echo -e "\nDISTRIB_RECOGNIZE='18'" >> "$BASE_PATH/etc/openwrt_release" && sed -i '/^\s*$/d' "$BASE_PATH/etc/openwrt_release"
+  
+  # 给源码增加luci-app-ssr-plus为默认自选
+  sed  -i  's/ luci-app-ssr-plus//g' target/linux/*/Makefile
+  sed -i 's/DEFAULT_PACKAGES +=/DEFAULT_PACKAGES += luci-app-ssr-plus/g' target/linux/*/Makefile
+  
+  # 替换99-default-settings
+  chmod -R 777 $HOME_PATH/build/common/Convert
+  cp -Rf $HOME_PATH/build/common/Convert/1806-default-settings "$ZZZ_PATH"
 
 ;;
 openwrt-21.02)
@@ -137,6 +155,14 @@ openwrt-21.02)
   
   # 给固件LUCI做个标记
   echo -e "\nDISTRIB_RECOGNIZE='20'" >> "$BASE_PATH/etc/openwrt_release" && sed -i '/^\s*$/d' "$BASE_PATH/etc/openwrt_release"
+  
+  # 给源码增加luci-app-ssr-plus为默认自选
+  sed  -i  's/ luci-app-ssr-plus//g' target/linux/*/Makefile
+  sed -i 's/DEFAULT_PACKAGES +=/DEFAULT_PACKAGES += luci-app-ssr-plus/g' target/linux/*/Makefile
+  
+  # 替换99-default-settings
+  chmod -R 775 $HOME_PATH/build/common/Convert
+  source $HOME_PATH/build/common/Convert/Convert.sh
 
 ;;
 esac
@@ -147,41 +173,34 @@ src-git helloworld https://github.com/fw876/helloworld
 src-git passwall https://github.com/shidahuilang/openwrt-passwall
 src-git dahuilang https://github.com/shidahuilang/openwrt-package.git;${REPO_BRANCH}
 " >> $HOME_PATH/feeds.conf.default
+sed -i '/^\s*$/d' "$HOME_PATH/feeds.conf.default"
 }
-
 
 function sbin_openwrt() {
-echo "给固件增加[openwrt]命令"
+echo " 正在执行：给固件增加[openwrt]命令"
 [[ -f $BUILD_PATH/openwrt.sh ]] && cp -Rf $BUILD_PATH/openwrt.sh $BASE_PATH/sbin/openwrt
-[[ -f $BUILD_PATH/tools.sh ]] && cp -Rf $BUILD_PATH/tools.sh $BASE_PATH/sbin/tools
 chmod 777 $BASE_PATH/sbin/openwrt
-chmod 777 $BASE_PATH/sbin/tools
 }
-
 
 function Diy_Lede() {
-echo "Lede专用自定义"
+echo " 正在执行：Lede专用自定义"
 }
-
 
 function Diy_Lienol() {
-echo "Lienol专用自定义"
+echo " 正在执行：Lienol专用自定义"
 }
-
 
 function Diy_Tianling() {
-echo "Tianling专用自定义"
+echo " 正在执行：Tianling专用自定义"
 }
-
 
 function Diy_Mortal() {
-echo "Mortal专用自定义"
+echo " 正在执行：Mortal专用自定义"
 }
-
 
 function Diy_amlogic() {
 if [[ "${matrixtarget}" == "openwrt_amlogic" ]]; then
-  echo "修复NTFS格式优盘不自动挂载，适配cpufreq，添加autocore支持"
+  echo " 正在执行：修复NTFS格式优盘不自动挂载，适配cpufreq，添加autocore支持"
   # 修复NTFS格式优盘不自动挂载
   packages=" \
   block-mount fdisk usbutils badblocks ntfs-3g kmod-scsi-core kmod-usb-core \
@@ -204,9 +223,8 @@ if [[ "${matrixtarget}" == "openwrt_amlogic" ]]; then
 fi
 }
 
-
 function Package_amlogic() {
-echo "打包N1和景晨系列固件"
+echo " 正在执行：打包N1和景晨系列固件"
 git clone --depth 1 https://github.com/ophub/amlogic-s9xxx-openwrt.git amlogic
 [ -d amlogic/openwrt-armvirt ] || mkdir -p amlogic/openwrt-armvirt
 cp -f $TARGET_BSGET/*.tar.gz amlogic/openwrt-armvirt/ && sync
@@ -217,9 +235,8 @@ sudo mv -f $GITHUB_WORKSPACE/amlogic/out/* $TARGET_BSGET/ && sync
 sudo rm -rf $GITHUB_WORKSPACE/amlogic
 }
 
-
 function Diy_indexhtm() {
-echo "去除主页一串的LUCI版本号显示"
+echo " 正在执行：去除主页一串的LUCI版本号显示"
 if [[ "${REPO_BRANCH}" == "master" ]]; then
   sed -i 's/distversion)%>/distversion)%><!--/g' package/lean/autocore/files/*/index.htm
   sed -i 's/luciversion)%>)/luciversion)%>)-->/g' package/lean/autocore/files/*/index.htm
@@ -232,9 +249,8 @@ if [[ "${REPO_BRANCH}" == "openwrt-18.06" ]]; then
 fi
 }
 
-
 function Diy_patches() {
-echo "如果有补丁文件，给源码打补丁"
+echo " 正在执行：如果有补丁文件，给源码打补丁"
 if [[ -d "${GITHUB_WORKSPACE}/OP_DIY" ]]; then
   cp -Rf $HOME_PATH/build/common/${SOURCE}/* $BUILD_PATH
   cp -Rf ${GITHUB_WORKSPACE}/OP_DIY/${matrixtarget}/* $BUILD_PATH
@@ -247,12 +263,8 @@ if [ -n "$(ls -A "$BUILD_PATH/patches" 2>/dev/null)" ]; then
 fi
 }
 
-
-################################################################################################################
-# 判断插件冲突
-################################################################################################################
 function Diy_prevent() {
-echo "判断插件冲突"
+echo " 正在执行：判断插件有否冲突减少编译错误"
 make defconfig > /dev/null 2>&1
 echo "TIME b \"					插件冲突信息\"" > ${HOME_PATH}/CHONGTU
 
@@ -384,7 +396,7 @@ if [[ `grep -c "CONFIG_PACKAGE_luci-app-unblockneteasemusic=y" ${HOME_PATH}/.con
 fi
 
 if [[ `grep -c "CONFIG_PACKAGE_ntfs-3g=y" ${HOME_PATH}/.config` -eq '1' ]]; then
-  mkdir -p ${HOME_PATH}/files/etc/hotplug.d/block && curl -fsSL  https://raw.githubusercontent.com/281677160/openwrt-package/usb/block/10-mount > ${HOME_PATH}/files/etc/hotplug.d/block/10-mount
+  mkdir -p ${HOME_PATH}/files/etc/hotplug.d/block && curl -fsSL  https://raw.githubusercontent.com/shidahuilang/openwrt-package/usb/block/10-mount > ${HOME_PATH}/files/etc/hotplug.d/block/10-mount
 fi
 
 if [[ `grep -c "CONFIG_TARGET_x86=y" ${HOME_PATH}/.config` -eq '1' ]] || [[ `grep -c "CONFIG_TARGET_rockchip=y" ${HOME_PATH}/.config` -eq '1' ]] || [[ `grep -c "CONFIG_TARGET_bcm27xx=y" ${HOME_PATH}/.config` -eq '1' ]]; then
@@ -436,23 +448,22 @@ echo
 if [ -n "$(ls -A "${HOME_PATH}/EXT4" 2>/dev/null)" ]; then
   chmod -R +x ${HOME_PATH}/EXT4
   source ${HOME_PATH}/EXT4
-  [[ -d "${GITHUB_WORKSPACE}/OP_DIY" ]] && rm -rf ${HOME_PATH}/{CHONGTU,Chajianlibiao,EXT4}
   echo
 fi
 if [ -n "$(ls -A "${HOME_PATH}/Chajianlibiao" 2>/dev/null)" ]; then
   chmod -R +x ${HOME_PATH}/CHONGTU
   source ${HOME_PATH}/CHONGTU
-  [[ -d "${GITHUB_WORKSPACE}/OP_DIY" ]] && rm -rf ${HOME_PATH}/{CHONGTU,Chajianlibiao}
   echo
 fi
 }
 
-
 function Diy_adguardhome() {
+## adguardhome编译时候带自选要不要编译内核了，此功能没用
 if [[ `grep -c "CONFIG_PACKAGE_luci-app-adguardhome=y" ${HOME_PATH}/.config` -eq '1' ]]; then
-  echo "给adguardhome下载核心"
+  echo " 正在执行：给adguardhome下载核心"
   if [[ `grep -c "CONFIG_ARCH=\"x86_64\"" ${HOME_PATH}/.config` -eq '1' ]]; then
     Arch="amd64"
+    echo "X86机型"
   elif [[ `grep -c "CONFIG_ARCH=\"i386\"" ${HOME_PATH}/.config` -eq '1' ]]; then
     Arch="i386"
   elif [[ `grep -c "CONFIG_ARCH=\"aarch64\"" ${HOME_PATH}/.config` -eq '1' ]]; then
@@ -467,27 +478,17 @@ if [[ `grep -c "CONFIG_PACKAGE_luci-app-adguardhome=y" ${HOME_PATH}/.config` -eq
     downloader="curl -L -k --retry 2 --connect-timeout 20 -o"
     latest_ver="$($downloader - https://api.github.com/repos/AdguardTeam/AdGuardHome/releases/latest 2>/dev/null|grep -E 'tag_name' |grep -E 'v[0-9.]+' -o 2>/dev/null)"
     wget -q https://github.com/AdguardTeam/AdGuardHome/releases/download/${latest_ver}/AdGuardHome_linux_${Arch}.tar.gz
-    tar -zxvf AdGuardHome_linux_${Arch}.tar.gz -C $HOME_PATH
-
-    if [[ -d "${GITHUB_WORKSPACE}/OP_DIY/${matrixtarget}" ]]; then
-      mkdir -p ${GITHUB_WORKSPACE}/OP_DIY/${matrixtarget}/files/usr/bin
-      [[ -f "${GITHUB_WORKSPACE}/OP_DIY/${matrixtarget}/files/usr/bin/AdGuardHome" ]] && rm -rf "${GITHUB_WORKSPACE}/OP_DIY/${matrixtarget}/files/usr/bin/AdGuardHome"
-      [[ -f "AdGuardHome/AdGuardHome" ]] && mv -f AdGuardHome/AdGuardHome ${GITHUB_WORKSPACE}/OP_DIY/${matrixtarget}/files/usr/bin/AdGuardHome
-      [[ -f "AdGuardHome/AdGuardHome" ]] && chmod 777 ${GITHUB_WORKSPACE}/OP_DIY/${matrixtarget}/files/usr/bin/AdGuardHome
-      rm -rf $HOME_PATH/{AdGuardHome_linux_${Arch}.tar.gz,AdGuardHome}
-    else
-      mkdir -p $HOME_PATH/files/usr/bin
-      [[ -f "AdGuardHome/AdGuardHome" ]] && mv -f AdGuardHome/AdGuardHome $HOME_PATH/files/usr/bin
-      [[ -f "AdGuardHome/AdGuardHome" ]] && chmod 777 $HOME_PATH/files/usr/bin/AdGuardHome
-      rm -rf $HOME_PATH/{AdGuardHome_linux_${Arch}.tar.gz,AdGuardHome}
-    fi
+    [[ -f "AdGuardHome_linux_${Arch}.tar.gz" ]] && tar -zxvf AdGuardHome_linux_${Arch}.tar.gz -C $HOME_PATH || echo "下载核心不成功"
+    mkdir -p $HOME_PATH/files/usr/bin
+    [[ -f "AdGuardHome/AdGuardHome" ]] && mv -f AdGuardHome/AdGuardHome $HOME_PATH/files/usr/bin
+    [[ -f "AdGuardHome/AdGuardHome" ]] && chmod 777 $HOME_PATH/files/usr/bin/AdGuardHome
+    rm -rf $HOME_PATH/{AdGuardHome_linux_${Arch}.tar.gz,AdGuardHome}
   fi
 fi
 }
 
-
 function Diy_files() {
-echo "files大法好，小白无烦恼"
+echo " 正在执行：files大法，设置固件无烦恼"
 if [[ -d "${GITHUB_WORKSPACE}/OP_DIY" ]]; then
   cp -Rf $HOME_PATH/build/common/${SOURCE}/* $BUILD_PATH
   cp -Rf ${GITHUB_WORKSPACE}/OP_DIY/${matrixtarget}/* $BUILD_PATH
@@ -503,40 +504,14 @@ if [ -n "$(ls -A "$BUILD_PATH/files" 2>/dev/null)" ]; then
 fi
 }
 
-
 function Diy_zzz() {
-echo "微微调整一下default-settings文件"
+echo " 正在执行：在default-settings文件加条执行命令"
 
-case "${REPO_BRANCH}" in
-master)
+sed -i '/webweb.sh/d' "$ZZZ_PATH"
+sed -i "/exit 0/i\chmod +x /etc/webweb.sh && source /etc/webweb.sh" "$ZZZ_PATH"
 
-  sed -i "/exit 0/i\chmod +x /etc/webweb.sh && source /etc/webweb.sh" "$ZZZ_PATH"
-
-;;
-main)
-
-  sed -i "/exit 0/i\chmod +x /etc/webweb.sh && source /etc/webweb.sh" "$ZZZ_PATH"
-  
-  DISTRIB="$(egrep -o "DISTRIB_DESCRIPTION='.* '" $ZZZ_PATH |sed -r "s/DISTRIB_DESCRIPTION='(.*) '/\1/")"
-  [[ -n "${DISTRIB}" ]] && sed -i "s/${DISTRIB}/OpenWrt/g" "$ZZZ_PATH"
-
-;;
-openwrt-18.06)
-
-  chmod -R 777 $HOME_PATH/build/common/Convert
-  cp -Rf $HOME_PATH/build/common/Convert/1806-default-settings "$ZZZ_PATH"
-
-;;
-openwrt-21.02)
-
-  chmod -R 777 $HOME_PATH/build/common/Convert
-  cp -Rf $HOME_PATH/build/common/Convert/* "$HOME_PATH"
-  /bin/bash Convert.sh
-
-;;
-esac
-
-sed -i '$ s/exit 0$//' $BASE_PATH/etc/rc.local
+if [[ `grep -c "crontabs" $BASE_PATH/etc/rc.local` -eq '0' ]] && [[ `grep -c "uhttpd" $BASE_PATH/etc/rc.local` -eq '0' ]]; then
+sed -i '$ s/exit 0$//g' $BASE_PATH/etc/rc.local
 echo '
 if [[ `grep -c "coremark" /etc/crontabs/root` -eq "1" ]]; then
   sed -i "/coremark/d" /etc/crontabs/root
@@ -545,12 +520,11 @@ fi
 /etc/init.d/uhttpd restart
 exit 0
 ' >> $BASE_PATH/etc/rc.local
+fi
 }
 
-
 function Make_defconfig() {
-echo "加载机型"
-make defconfig > /dev/null 2>&1
+echo " 正在执行：加载机型中..."
 export TAR_BOARD="$(awk -F '[="]+' '/TARGET_BOARD/{print $2}' $HOME_PATH/.config)"
 export TAR_SUBTARGET="$(awk -F '[="]+' '/TARGET_SUBTARGET/{print $2}' $HOME_PATH/.config)"
 echo "TARGET_BOARD=$(awk -F '[="]+' '/TARGET_BOARD/{print $2}' $HOME_PATH/.config)" >> $GITHUB_ENV
@@ -582,10 +556,11 @@ else
   export TARGET_PROFILE="${TARGET_BOARD}"
 fi
 export TARGET_BSGET="$HOME_PATH/bin/targets/$TARGET_BOARD/$TARGET_SUBTARGET"
+export TARGET_OPENWRT="openwrt/bin/targets/$TARGET_BOARD/$TARGET_SUBTARGET"
 }
 
 function Diy_firmware() {
-echo "整理固件,您不想要啥就删啥"
+echo " 正在执行：整理固件,您不想要啥就删啥,删删删"
 if [ "${REGULAR_UPDATE}" == "true" ]; then
   cp -Rf ${TARGET_BSGET} $HOME_PATH/upgrade
 fi
@@ -603,8 +578,18 @@ rename -v "s/^openwrt/${SOURCE}/" *
 if [ "${UPLOAD_RELEASE}" == "true" ]; then
   echo "### $(date +"%Y年%m月%d号-%H点%M分")" > ${GITHUB_WORKSPACE}/update_log.txt
 fi
-}	
+}
 
+function Diy_Language() {
+if [[ "${REPO_BRANCH}" == "main" ]] || [[ "${REPO_BRANCH}" == "openwrt-21.02" ]]; then
+  echo " 正在执行：把插件语言转换成zh_Hans"
+  cd $HOME_PATH
+  cp -Rf $HOME_PATH/build/common/Convert/zh_Hans.sh $HOME_PATH/zh_Hans.sh
+  chmod +x $HOME_PATH/zh_Hans.sh
+  /bin/bash $HOME_PATH/zh_Hans.sh
+  rm -rf $HOME_PATH/zh_Hans.sh
+fi
+}
 
 function Diy_Notice() {
 TIME y "第一次用我仓库的，请不要拉取任何插件，先SSH进入固件配置那里看过我脚本实在是没有你要的插件才再拉取"
@@ -612,7 +597,6 @@ TIME y "拉取插件应该单独拉取某一个你需要的插件，别一下子
 TIME r "修改IP、DNS、网关，请输入命令：openwrt"
 TIME r "如果您的机子在线更新固件可用，而又编译了，也可请输入命令查看在线更新操作：openwrt"
 }
-
 
 function Diy_xinxi() {
 Compte=$(date +%Y年%m月%d号%H时%M分)
@@ -629,7 +613,6 @@ TIME b "编译源码: ${SOURCE}"
 TIME b "源码链接: ${REPO_URL}"
 TIME b "源码分支: ${REPO_BRANCH}"
 TIME b "源码作者: ${MAINTAIN}"
-TIME b "内核版本: ${PATCHVER}"
 TIME b "Luci版本: ${LUCI_EDITION}"
 [[ "${matrixtarget}" == "openwrt_amlogic" ]] && {
 	TIME b "编译机型: 晶晨系列"
@@ -736,12 +719,11 @@ if [ -n "$(ls -A "${HOME_PATH}/Plug-in" 2>/dev/null)" ]; then
 fi
 }
 
-
-function Diy_menu2() {
-Diy_prevent
-Diy_adguardhome
+function Diy_menu3() {
 Diy_files
 Diy_zzz
+sbin_openwrt
+Diy_Language
 if [[ -d "${GITHUB_WORKSPACE}/OP_DIY" ]]; then
   Make_upgrade
 else
@@ -749,11 +731,22 @@ else
 fi
 }
 
+function Diy_menu2() {
+Diy_prevent
+Diy_files
+Diy_zzz
+sbin_openwrt
+Diy_Language
+if [[ -d "${GITHUB_WORKSPACE}/OP_DIY" ]]; then
+  Make_upgrade
+else
+  Make_defconfig
+fi
+}
 
 function Diy_menu() {
 Diy_settings
 Diy_feeds
-sbin_openwrt
 Diy_${SOURCE}
 Diy_amlogic
 /bin/bash $BUILD_PATH/$DIY_PART_SH
@@ -762,6 +755,7 @@ Diy_patches
 if [[ "${REGULAR_UPDATE}" == "true" ]]; then
   source $BUILD_PATH/upgrade.sh && Diy_Part1
 fi
+echo " 正在执行：更新feeds,请耐心等待..."
 ./scripts/feeds update -a
 ./scripts/feeds install -a > /dev/null 2>&1
 ./scripts/feeds install -a
