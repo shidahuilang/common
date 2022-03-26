@@ -78,19 +78,7 @@ echo "随便判断一下是不是缺少文件了"
       TIME r "错误提示：编译脚本缺少[${DIY_PART_SH}]名称的自定义设置文件,请在[build/${matrixtarget}]文件夹内补齐"
       exit 1
     fi
-    	if [[ `grep -c "KERNEL_PATCHVER:=" ${Home}/target/linux/${TARGET_BOARD}/Makefile` -eq '1' ]]; then
-		PATCHVE="$(egrep -o 'KERNEL_PATCHVER:=[0-9]+\.[0-9]+' ${Home}/target/linux/${TARGET_BOARD}/Makefile |cut -d "=" -f2)"
-	elif [[ `grep -c "KERNEL_PATCHVER=" ${Home}/target/linux/${TARGET_BOARD}/Makefile` -eq '1' ]]; then
-		PATCHVE="$(egrep -o 'KERNEL_PATCHVER=[0-9]+\.[0-9]+' ${Home}/target/linux/${TARGET_BOARD}/Makefile |cut -d "=" -f2)"
-	else
-		PATCHVER="unknown"
-	fi
-	if [[ -n ${PATCHVE} ]]; then
-		if [[ -f ${Home}/include/kernel-${PATCHVE} ]]; then
-			PATCHVER=$(egrep -o "${PATCHVE}.[0-9]+" ${Home}/include/kernel-${PATCHVE})
-		else
-			PATCHVER=$(egrep -o "${PATCHVE}.[0-9]+" ${Home}/include/kernel-version.mk)
-		fi
+
   }
  
 }
