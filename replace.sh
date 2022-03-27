@@ -269,7 +269,7 @@ menu() {
   if [[ ${SOURCE} == "Lede" ]]; then
     export MAINTAIN_1="18.06-Tianling"
     export MAINTAIN_2="21.02-Mortal"
-    export MAINTAIN_3="20.06-Lienol"
+    export MAINTAIN_3="20.07-Lienol"
     export tixinggg="Tianling、Mortal或Lienol"
     opapi
     Firmware_Path
@@ -286,7 +286,7 @@ menu() {
     clear
   elif [[ ${SOURCE} == "Mortal" ]]; then
     export MAINTAIN_1="18.06-Lede"
-    export MAINTAIN_2="20.06-Lienol"
+    export MAINTAIN_2="20.07-Lienol"
     export MAINTAIN_3="18.06-Tianling"
     export tixinggg="Lede、Lienol或Tianling"
     opapi
@@ -295,7 +295,7 @@ menu() {
   elif [[ ${SOURCE} == "Tianling" ]]; then
     export MAINTAIN_1="18.06-Lede"
     export MAINTAIN_2="21.02-Mortal"
-    export MAINTAIN_3="20.06-Lienol"
+    export MAINTAIN_3="20.07-Lienol"
     export tixinggg="Lede、Mortal或Lienol"
     opapi
     Firmware_Path
