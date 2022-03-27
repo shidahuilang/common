@@ -1,7 +1,10 @@
+#!/usr/bin/env bash
+#====================================================
 #!/bin/bash
-# https://github.com/shidahuilang/openwrt
+# https://github.com/shidahuilang/langlang
 # common Module by 大灰狼
 # matrix.target=${Modelfile}
+#====================================================
 
 function TIME() {
 Compte=$(date +%Y年%m月%d号%H时%M分)
@@ -31,6 +34,7 @@ echo "DELETE=${GITHUB_WORKSPACE}/openwrt/package/base-files/files/etc/deletefile
 echo "Convert_path=${GITHUB_WORKSPACE}/openwrt/build/common/Convert" >> $GITHUB_ENV
 echo "Upgrade_Date=$(date +%Y%m%d%H%M)" >> $GITHUB_ENV
 echo "Firmware_Date=$(date +%Y-%m%d-%H%M)" >> $GITHUB_ENV
+echo "Compte_Date=$(date +%Y年%m月%d号%H时%M分)" >> $GITHUB_ENV
 if [[ "${REPO_BRANCH}" == "master" ]]; then
   echo "ZZZ_PATH=${GITHUB_WORKSPACE}/openwrt/package/lean/default-settings/files/zzz-default-settings" >> $GITHUB_ENV
   echo "SOURCE=Lede" >> $GITHUB_ENV
@@ -40,7 +44,7 @@ elif [[ "${REPO_BRANCH}" == "main" ]]; then
   echo "ZZZ_PATH=${GITHUB_WORKSPACE}/openwrt/package/default-settings/files/zzz-default-settings" >> $GITHUB_ENV
   echo "SOURCE=Lienol" >> $GITHUB_ENV
   echo "MAINTAIN=Lienol's" >> $GITHUB_ENV
-  echo "LUCI_EDITION=20.06" >> $GITHUB_ENV
+  echo "LUCI_EDITION=20.07" >> $GITHUB_ENV
 elif [[ "${REPO_BRANCH}" == "openwrt-18.06" ]]; then
   echo "ZZZ_PATH=${GITHUB_WORKSPACE}/openwrt/package/emortal/default-settings/files/99-default-settings" >> $GITHUB_ENV
   echo "SOURCE=Tianling" >> $GITHUB_ENV
@@ -235,16 +239,16 @@ cp -f $TARGET_BSGET/*.tar.gz amlogic/openwrt-armvirt/ && sync
 chmod 775 $GITHUB_WORKSPACE/amlogic_openwrt.sh
 source $GITHUB_WORKSPACE/amlogic_openwrt.sh
 if [[ -n ${amlogic_model} ]] && [[ -n ${amlogic_kernel} ]] && [[ -n ${rootfs_size} ]]; then
-  amlogic_model="${amlogic_model}"
-  amlogic_kernel="${amlogic_kernel}"
-  rootfs_size="${rootfs_size}"
+  export amlogic_model="${amlogic_model}"
+  export amlogic_kernel="${amlogic_kernel}"
+  export rootfs_size="${rootfs_size}"
+  export make_size="$(egrep -o ROOT_MB=\"[0-9]+\" "$GITHUB_WORKSPACE/amlogic/make")"
+  export zhiding_size="ROOT_MB=\"${rootfs_size}\""
+  sed -i "s?${make_size}?${zhiding_size}?g" "$GITHUB_WORKSPACE/amlogic/make"
 else
   amlogic_model="s905x3_s905x2_s905x_s905w_s905d_s922x_s912"
   amlogic_kernel="5.10.100_5.4.180 -a true"
 fi
-make_size="$(grep ROOT_MB= $GITHUB_WORKSPACE/amlogic/make)"
-zhiding_size="ROOT_MB=\"${rootfs_size}\""
-sed -i "s#${make_size}#${zhiding_size}#g" $GITHUB_WORKSPACE/amlogic/make
 
 # 开始打包
 cd amlogic
@@ -253,7 +257,6 @@ sudo ./make -d -b ${amlogic_model} -k ${amlogic_kernel}
 sudo mv -f $GITHUB_WORKSPACE/amlogic/out/* $TARGET_BSGET/ && sync
 sudo rm -rf $GITHUB_WORKSPACE/amlogic
 }
-
 
 function Diy_indexhtm() {
 echo " 正在执行：去除主页一串的LUCI版本号显示"
@@ -601,7 +604,7 @@ fi
 }
 
 function Diy_Language() {
-if [[ "${REPO_BRANCH}" == "main" ]] || [[ "${REPO_BRANCH}" == "openwrt-21.02" ]]; then
+if [[ "${REPO_BRANCH}" == "openwrt-21.02" ]]; then
   echo " 正在执行：把插件语言转换成zh_Hans"
   cd $HOME_PATH
   cp -Rf $HOME_PATH/build/common/Convert/zh_Hans.sh $HOME_PATH/zh_Hans.sh
@@ -619,7 +622,6 @@ TIME r "如果您的机子在线更新固件可用，而又编译了，也可请
 }
 
 function Diy_xinxi() {
-Compte=$(date +%Y年%m月%d号%H时%M分)
 Plug_in="$(grep -i 'CONFIG_PACKAGE_luci-app' $HOME_PATH/.config && grep -i 'CONFIG_PACKAGE_luci-theme' $HOME_PATH/.config)"
 Plug_in2="$(echo "${Plug_in}" | grep -v '^#' |sed '/INCLUDE/d' |sed '/_Transparent_Proxy/d' |sed '/qbittorrent_static/d' |sed 's/CONFIG_PACKAGE_//g' |sed 's/=y//g' |sed 's/^/、/g' |sed 's/$/\"/g' |awk '$0=NR$0' |sed 's/^/TIME g \"       /g')"
 echo "${Plug_in2}" >Plug-in
@@ -628,26 +630,41 @@ cat /proc/cpuinfo | grep "cpu cores" | uniq >> CPU
 sed -i 's|[[:space:]]||g; s|^.||' CPU && sed -i 's|CPU||g; s|pucores:||' CPU
 CPUNAME="$(awk 'NR==1' CPU)" && CPUCORES="$(awk 'NR==2' CPU)"
 rm -rf CPU
+
+if [[ "${REPO_BRANCH}" == "openwrt-18.06" ]] || [[ "${REPO_BRANCH}" == "openwrt-21.02" ]]; then
+  export KERNEL_PATC=""
+  export KERNEL_PATC="$(egrep KERNEL_PATCHVER:=[0-9]+\.[0-9]+ $HOME_PATH/target/linux/${TARGET_BOARD}/Makefile |cut -d "=" -f2)"
+  [[ -z ${KERNEL_PATC} ]] && export KERNEL_PATC="$(egrep KERNEL_PATCHVER=[0-9]+\.[0-9]+ $HOME_PATH/target/linux/${TARGET_BOARD}/Makefile |cut -d "=" -f2)"
+  [[ -n ${KERNEL_PATC} ]] && export LINUX_KERNEL="$(egrep -o LINUX_KERNEL_HASH-${KERNEL_PATC}\.[0-9]+ $HOME_PATH/include/kernel-version.mk |cut -d "-" -f2)"
+  [[ -z ${LINUX_KERNEL} ]] && export LINUX_KERNEL="nono"
+else
+  export KERNEL_PATC=""
+  export KERNEL_PATC="$(egrep KERNEL_PATCHVER:=[0-9]+\.[0-9]+ $HOME_PATH/target/linux/${TARGET_BOARD}/Makefile |cut -d "=" -f2)"
+  [[ -z ${KERNEL_PATC} ]] && export KERNEL_PATC="$(egrep KERNEL_PATCHVER=[0-9]+\.[0-9]+ $HOME_PATH/target/linux/${TARGET_BOARD}/Makefile |cut -d "=" -f2)"
+  [[ -n ${KERNEL_PATC} ]] && export LINUX_KERNEL="$(egrep -o LINUX_KERNEL_HASH-${KERNEL_PATC}\.[0-9]+ $HOME_PATH/include/kernel-${KERNEL_PATC} |cut -d "-" -f2)"
+  [[ -z ${LINUX_KERNEL} ]] && export LINUX_KERNEL="nono"
+fi
+
+if [[ "${matrixtarget}" == "openwrt_amlogic" ]]; then
+  export TARGET_DHL="晶晨系列"
+else
+  export TARGET_DHL="${TARGET_PROFILE}"
+fi
+
+
 echo
 TIME b "编译源码: ${SOURCE}"
 TIME b "源码链接: ${REPO_URL}"
 TIME b "源码分支: ${REPO_BRANCH}"
 TIME b "源码作者: ${MAINTAIN}"
+TIME b "内核版本: ${LINUX_KERNEL}"
 TIME b "Luci版本: ${LUCI_EDITION}"
-[[ "${matrixtarget}" == "openwrt_amlogic" ]] && {
-	TIME b "编译机型: 晶晨系列"
-} || {
-	TIME b "编译机型: ${TARGET_PROFILE}"
-}
+TIME b "编译机型: ${TARGET_DHL}"
 TIME b "固件作者: ${Author}"
 TIME b "仓库地址: ${Github}"
 TIME b "启动编号: #${Run_number}（${Library}仓库第${Run_number}次启动[${Run_workflow}]工作流程）"
-TIME b "编译时间: ${Compte}"
-[[ "${matrixtarget}" == "openwrt_amlogic" ]] && {
-	TIME g "友情提示：您当前使用【${matrixtarget}】文件夹编译【晶晨系列】固件"
-} || {
-	TIME g "友情提示：您当前使用【${matrixtarget}】文件夹编译【${TARGET_PROFILE}】固件"
-}
+TIME b "编译时间: ${Compte_Date}"
+TIME g "友情提示：您当前使用【${matrixtarget}】文件夹编译【${TARGET_DHL}】固件"
 echo
 echo
 if [[ ${UPLOAD_FIRMWARE} == "true" ]]; then
