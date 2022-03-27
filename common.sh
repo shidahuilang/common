@@ -183,6 +183,8 @@ sed -i '/^\s*$/d' "$HOME_PATH/feeds.conf.default"
 function sbin_openwrt() {
 echo " 正在执行：给固件增加[openwrt]命令"
 [[ -f $BUILD_PATH/openwrt.sh ]] && cp -Rf $BUILD_PATH/openwrt.sh $BASE_PATH/sbin/openwrt
+[[ -f $BUILD_PATH/tools.sh ]] && cp -Rf $BUILD_PATH/tools.sh $BASE_PATH/sbin/tools
+chmod 777 $BASE_PATH/sbin/tools
 chmod 777 $BASE_PATH/sbin/openwrt
 }
 
