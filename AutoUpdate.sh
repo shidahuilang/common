@@ -106,23 +106,10 @@ x86)
   } || {
     export BOOT_Type="legacy"
   }
-  export CPUmodel="$(cat "/tmp/sysinfo/model" |cut -d ":" -f1|sed 's/\ CPU//g'|sed 's/[ \t]*$//g')"
+  export CPUmodel="$(cat /proc/cpuinfo |grep 'model name' |awk 'END {print}' |cut -f2 -d: |sed 's/^[ ]*//g'|sed 's/\ CPU//g')"
   if [[ "$(echo ${CPUmodel} |grep -c 'Intel')" -ge '1' ]]; then
-    export CPU_model="${CPUmodel%Intel*}"
-    if [[ -n "${CPU_model}" ]]; then
-      export Cpu1_Device="$(echo "${CPUmodel}" |sed "s/${CPU_model}//g")"
-      export Cpu2_Device="$(echo "${Cpu1_Device}" |awk '{print $2}')"
-      export CURRENT_Device="$(echo "${Cpu1_Device}" |sed "s/${Cpu2_Device}//g")"
-    else
-      export Cpu2_Device="$(echo "${CPUmodel}" |awk '{print $2}')"
-      export CURRENT_Device="$(echo "${CPUmodel}" |sed "s/${Cpu2_Device}//g")"
-    fi
-  elif [[ "$(echo ${CPUmodel} |grep -c 'AMD')" -ge '1' ]]; then
-    export CPU_model="${CPUmodel%AMD*}"
-    if [[ -n "${CPU_model}" ]]; then
-      export CURRENT_Device="$(echo "${CPUmodel}" |sed "s/${CPU_model}//g")"
-    else
-      export CURRENT_Device="${CPUmodel}"
+    export Cpu_Device="$(echo "${CPUmodel}" |awk '{print $2}')"
+    export CURRENT_Device="$(echo "${CPUmodel}" |sed "s/${Cpu_Device}//g")"
   else
     export CURRENT_Device="${CPUmodel}"
   fi
@@ -213,7 +200,7 @@ else
   -c)
       Github="$(grep Github= /bin/openwrt_info | cut -d "=" -f2)"
       TIME h "执行：更换[Github地址]操作"
-      TIME y "正确地址格式：https://github.com/帐号/仓库"
+      TIME y "正确地址格式：https://github.com/shidahuilang/openwrt"
       TIME h  "现在所用地址为：${Github}"
       echo
       export YUMING="请输入新的Github地址(直接回车为不修改,退出程序)"      
