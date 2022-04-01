@@ -597,6 +597,7 @@ fi
 exit 0
 ' >> $BASE_PATH/etc/rc.local
 fi
+sed -i '/^$/d' "$BASE_PATH/etc/rc.local"
 }
 
 function Make_defconfig() {
