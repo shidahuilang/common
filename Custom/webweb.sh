@@ -42,7 +42,7 @@ if [[ `grep -c "bing_background" /etc/config/argon` -eq '1' ]]; then
   uci commit argon
 fi
 
-sed -i '/danshui/d' /etc/opkg/distfeeds.conf
+sed -i '/dahuilang/d' /etc/opkg/distfeeds.conf
 sed -i '/helloworld/d' /etc/opkg/distfeeds.conf
 sed -i '/passwall/d' /etc/opkg/distfeeds.conf
 
