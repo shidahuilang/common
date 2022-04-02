@@ -218,10 +218,12 @@ src-git passwall1 https://github.com/xiaorouji/openwrt-passwall;luci
 src-git passwall2 https://github.com/xiaorouji/openwrt-passwall2;main
 src-git dahuilang https://github.com/shidahuilang/openwrt-package.git;${REPO_BRANCH}
 " >> $HOME_PATH/feeds.conf.default
-sed -i '/^\s*$/d' "$HOME_PATH/feeds.conf.default"
+sed -i '/^#/d' "$HOME_PATH/feeds.conf.default"
+sed -i '/^$/d' "$HOME_PATH/feeds.conf.default"
 }
 
 function sbin_openwrt() {
+echo " 正在执行：给固件增加[openwrt]命令"
 [[ -f $BUILD_PATH/openwrt.sh ]] && cp -Rf $BUILD_PATH/openwrt.sh $BASE_PATH/sbin/openwrt
 [[ -f $BUILD_PATH/tools.sh ]] && cp -Rf $BUILD_PATH/tools.sh $BASE_PATH/sbin/tools
 chmod 777 $BASE_PATH/sbin/tools
@@ -495,6 +497,11 @@ if [[ `grep -c "CONFIG_TARGET_armvirt=y" ${HOME_PATH}/.config` -eq '1' ]]; then
   echo -e "\nCONFIG_PACKAGE_openssh-sftp-server=y" >> "${HOME_PATH}/.config"
 fi
 
+if [[ `grep -c "CONFIG_PACKAGE_odhcp6c=y" ${HOME_PATH}/.config` -eq '1' ]]; then
+  sed -i '/CONFIG_PACKAGE_odhcpd=y/d' "${HOME_PATH}/.config"
+  sed -i '/CONFIG_PACKAGE_odhcpd_full_ext_cer_id=0/d' "${HOME_PATH}/.config"
+fi
+
 if [[ `grep -c "CONFIG_TARGET_ROOTFS_EXT4FS=y" ${HOME_PATH}/.config` -eq '1' ]]; then
   PARTSIZE="$(egrep -o "CONFIG_TARGET_ROOTFS_PARTSIZE=[0-9]+" ${HOME_PATH}/.config |cut -f2 -d=)"
   if [[ "${PARTSIZE}" -lt "950" ]];then
@@ -579,19 +586,18 @@ rm -rf $HOME_PATH/files/{README,REA*.md}
 
 function Diy_zzz() {
 echo " 正在执行：在default-settings文件加条执行命令"
+
+curl -fsSL https://raw.githubusercontent.com/shidahuilang/common/main/Custom/FinishIng.sh > $BASE_PATH/etc/FinishIng.sh
+curl -fsSL https://raw.githubusercontent.com/shidahuilang/common/main/Custom/webweb.sh > $BASE_PATH/etc/webweb.sh
 if [[ $? -ne 0 ]]; then
   wget -q -O webweb.sh -P $BASE_PATH/etc https://raw.githubusercontent.com/shidahuilang/common/main/Custom/webweb.sh
 fi
-
 sed -i '/webweb.sh/d' "$ZZZ_PATH"
 sed -i "/exit 0/i\chmod +x /etc/webweb.sh && source /etc/webweb.sh" "$ZZZ_PATH"
 
 if [[ `grep -c "crontabs" $BASE_PATH/etc/rc.local` -eq '0' ]] && [[ `grep -c "uhttpd" $BASE_PATH/etc/rc.local` -eq '0' ]]; then
 sed -i '$ s/exit 0$//g' $BASE_PATH/etc/rc.local
 echo '
-if [[ `grep -c "coremark" /etc/crontabs/root` -eq "1" ]]; then
-  sed -i "/coremark/d" /etc/crontabs/root
-fi
 /etc/init.d/network restart
 /etc/init.d/uhttpd restart
 exit 0
