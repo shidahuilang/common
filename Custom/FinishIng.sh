@@ -7,3 +7,4 @@ echo " (CpuMark : 56983.857988" >> /etc/bench.log
 echo " Scores)" >> /etc/bench.log
 EOF
 sed -i '/exit 0/d' $SSS && echo "exit 0" >> $SSS
+exit 0
