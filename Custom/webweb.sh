@@ -16,7 +16,7 @@ cp -Rf /etc/config/network /mnt/network
 
 sed -i '/mp\/luci-/d' /etc/crontabs/root
 echo "0 1 * * 1 rm -rf /tmp/luci-*cache* > /dev/null 2>&1" >> /etc/crontabs/root
-echo "0 3 */7 * * source /etc/FinishIng.sh > /dev/null 2>&1" >> /etc/crontabs/root
+echo "0 5 */1 * * source /etc/FinishIng.sh > /dev/null 2>&1" >> /etc/crontabs/root
 /etc/init.d/cron restart
 chmod -R 775 /etc/FinishIng.sh
 
