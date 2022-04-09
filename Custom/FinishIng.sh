@@ -1,12 +1,11 @@
 #!/bin/bash
-cat /dev/null > /etc/bench.log
-echo " (CpuMark : 1297821.2987633" >> /etc/bench.log
-echo " Scores)" >> /etc/bench.log
 
-if [ -f "/etc/bench.log" ]; then
- sed -i '/coremark/d' /etc/crontabs/root
- crontab /etc/crontabs/root
+sed -i '/coremark/d' /etc/rc.local
+sed -i '/mediaurlbase/d' /etc/rc.local
+sed -i '/FinishIng.sh/d' /etc/rc.local
+rm -rf /etc/FinishIng.sh
+if [[ -f '/etc/webweb.sh' ]]; then
+  source /etc/webweb.sh
+  reboot -f
 fi
-
 exit 0
-
