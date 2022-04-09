@@ -90,11 +90,13 @@ case ${Firmware_SFX} in
       export CURRENT_Device="$(echo "${CPUmodel}" |sed "s/${Cpu_Device}//g")"
     else
       export CURRENT_Device="${CPUmodel}"
+    fi
   fi
 ;;
 *)
   export BOOT_Type="sysupgrade"
   export CURRENT_Device="$(jsonfilter -e '@.model.id' < /etc/board.json | tr ',' '_')"
+;;
 esac
 
 opapi() {
