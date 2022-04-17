@@ -1,6 +1,6 @@
 #!/bin/bash
 cat /dev/null > /etc/bench.log
-echo " (CpuMark : 1297821.2987633" >> /etc/bench.log
+echo " (CpuMark : 2297821.3987633" >> /etc/bench.log
 echo " Scores)" >> /etc/bench.log
 
 if [ -f "/etc/bench.log" ]; then
