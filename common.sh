@@ -25,70 +25,27 @@ Compte=$(date +%Y年%m月%d号%H时%M分)
     }
 }
 
-function Diy_variable() {
-echo "HOME_PATH=${GITHUB_WORKSPACE}/openwrt" >> $GITHUB_ENV
-echo "BUILD_PATH=${GITHUB_WORKSPACE}/openwrt/build/${matrixtarget}" >> $GITHUB_ENV
-echo "BASE_PATH=${GITHUB_WORKSPACE}/openwrt/package/base-files/files" >> $GITHUB_ENV
-echo "NETIP=${GITHUB_WORKSPACE}/openwrt/package/base-files/files/etc/networkip" >> $GITHUB_ENV
-echo "DELETE=${GITHUB_WORKSPACE}/openwrt/package/base-files/files/etc/deletefile" >> $GITHUB_ENV
-echo "Convert_path=${GITHUB_WORKSPACE}/openwrt/build/common/Convert" >> $GITHUB_ENV
-echo "Upgrade_Date=$(date +%Y%m%d%H%M)" >> $GITHUB_ENV
-echo "Firmware_Date=$(date +%Y-%m%d-%H%M)" >> $GITHUB_ENV
-echo "Compte_Date=$(date +%Y年%m月%d号%H时%M分)" >> $GITHUB_ENV
-echo "Tongzhi_Date=$(date +%Y年%m月%d日)" >> $GITHUB_ENV
-
-
-# github用的变量，如果有修改，下面Bendi_variable也要同步修改
-
-if [[ "${REPO_BRANCH}" == "master" ]]; then
-  echo "ZZZ_PATH=${GITHUB_WORKSPACE}/openwrt/package/lean/default-settings/files/zzz-default-settings" >> $GITHUB_ENV
-  echo "SOURCE=Lede" >> $GITHUB_ENV
-  echo "LUCI_EDITION=18.06" >> $GITHUB_ENV
-  echo "MAINTAIN=Lean's" >> $GITHUB_ENV
-elif [[ "${REPO_BRANCH}" == "22.03" ]]; then
-  echo "ZZZ_PATH=${GITHUB_WORKSPACE}/openwrt/package/default-settings/files/zzz-default-settings" >> $GITHUB_ENV
-  echo "SOURCE=Lienol" >> $GITHUB_ENV
-  echo "LUCI_EDITION=22.03" >> $GITHUB_ENV
-  echo "MAINTAIN=Lienol's" >> $GITHUB_ENV
-elif [[ "${REPO_BRANCH}" == "openwrt-18.06" ]]; then
-  echo "ZZZ_PATH=${GITHUB_WORKSPACE}/openwrt/package/emortal/default-settings/files/99-default-settings" >> $GITHUB_ENV
-  echo "SOURCE=Tianling" >> $GITHUB_ENV
-  echo "LUCI_EDITION=18.06" >> $GITHUB_ENV
-  echo "MAINTAIN=CTCGFW's" >> $GITHUB_ENV
-elif [[ "${REPO_BRANCH}" == "openwrt-21.02" ]]; then
-  echo "ZZZ_PATH=${GITHUB_WORKSPACE}/openwrt/package/emortal/default-settings/files/99-default-settings" >> $GITHUB_ENV
-  echo "SOURCE=Mortal" >> $GITHUB_ENV
-  echo "LUCI_EDITION=21.02" >> $GITHUB_ENV
-  echo "MAINTAIN=CTCGFW's" >> $GITHUB_ENV
-else
-  echo "没发现该源码的分支，如果您没更改过的话，应该是上游仓库修改了，请同步上游仓库"
+function Diy_repo_url() {
+if [ -z "$(ls -A "${GITHUB_WORKSPACE}/build/${matrixtarget}/settings.ini" 2>/dev/null)" ]; then
+  TIME r "错误提示：编译脚本缺少[settings.ini]名称的配置文件,请在[build/${matrixtarget}]文件夹内补齐"
   exit 1
+else
+  source "${GITHUB_WORKSPACE}/build/${matrixtarget}/settings.ini"
 fi
-}
-
-function Bendi_variable() {
-# 本地用的变量，如果上面Diy_variable有修改，下面也要同步修改
-if [[ "${matrixtarget}" == "Lede_source" ]]; then
-  export ZZZ_PATH="${HOME_PATH}/package/lean/default-settings/files/zzz-default-settings"
-  export SOURCE="Lede"
-  export LUCI_EDITION="18.06"
-elif [[ "${matrixtarget}" == "Lienol_source" ]]; then
-  export ZZZ_PATH="${HOME_PATH}/package/default-settings/files/zzz-default-settings"
-  export SOURCE="Lienol"
-  export LUCI_EDITION="22.03"
-elif [[ "${matrixtarget}" == "Tianling_source" ]]; then
-  export ZZZ_PATH="${HOME_PATH}/package/emortal/default-settings/files/99-default-settings"
-  export SOURCE="Tianling"
-  export LUCI_EDITION="18.06"
-elif [[ "${matrixtarget}" == "Mortal_source" ]]; then
-  export ZZZ_PATH="${HOME_PATH}/package/emortal/default-settings/files/99-default-settings"
-  export SOURCE="Mortal"
-  export LUCI_EDITION="21.02"
-elif [[ "${matrixtarget}" == "openwrt_amlogic" ]]; then
-  export ZZZ_PATH="${HOME_PATH}/package/lean/default-settings/files/zzz-default-settings"
-  export SOURCE="Lede"
-  export LUCI_EDITION="18.06"
-fi
+echo "REPO_URL=${REPO_URL}" >> $GITHUB_ENV
+echo "REPO_BRANCH=${REPO_BRANCH}" >> $GITHUB_ENV
+echo "CONFIG_FILE=${CONFIG_FILE}" >> $GITHUB_ENV
+echo "DIY_PART_SH=${DIY_PART_SH}" >> $GITHUB_ENV
+echo "UPLOAD_FIRMWARE=${UPLOAD_FIRMWARE}" >> $GITHUB_ENV
+echo "UPLOAD_WETRANSFER=${UPLOAD_WETRANSFER}" >> $GITHUB_ENV
+echo "UPLOAD_RELEASE=${UPLOAD_RELEASE}" >> $GITHUB_ENV
+echo "SERVERCHAN_SCKEY=${SERVERCHAN_SCKEY}" >> $GITHUB_ENV
+echo "REGULAR_UPDATE=${REGULAR_UPDATE}" >> $GITHUB_ENV
+echo "USE_CACHEWRTBUILD=${USE_CACHEWRTBUILD}" >> $GITHUB_ENV
+echo "AUTOMATIC_AMLOGIC=${AUTOMATIC_AMLOGIC}" >> $GITHUB_ENV
+echo "BY_INFORMATION=${BY_INFORMATION}" >> $GITHUB_ENV
+echo "Library=${Warehouse##*/}" >> $GITHUB_ENV
+echo "matrixtarget=${matrixtarget}" >> $GITHUB_ENV
 }
 
 function Diy_settings() {
@@ -107,15 +64,135 @@ echo "正在执行：随便判断一下是不是缺少文件了"
       exit 1
     fi
   } || {
-    if [ -z "$(ls -A "$BUILD_PATH/${CONFIG_FILE}" 2>/dev/null)" ]; then
+    if [ -z "$(ls -A "$GITHUB_WORKSPACE/build/${matrixtarget}/${CONFIG_FILE}" 2>/dev/null)" ]; then
       TIME r "错误提示：编译脚本缺少[${CONFIG_FILE}]名称的配置文件,请在[build/${matrixtarget}]文件夹内补齐"
       exit 1
     fi
-    if [ -z "$(ls -A "$BUILD_PATH/${DIY_PART_SH}" 2>/dev/null)" ]; then
+    if [ -z "$(ls -A "$GITHUB_WORKSPACE/build/${matrixtarget}/${DIY_PART_SH}" 2>/dev/null)" ]; then
       TIME r "错误提示：编译脚本缺少[${DIY_PART_SH}]名称的自定义设置文件,请在[build/${matrixtarget}]文件夹内补齐"
       exit 1
     fi
   }
+}
+
+function Diy_update() {
+sudo rm -rf /etc/apt/sources.list.d/* /usr/share/dotnet /usr/local/lib/android /usr/lib/jvm /opt/ghc
+sudo -E apt-get -qq update -y
+sudo -E apt-get -qq full-upgrade -y
+sudo -E apt-get -qq install -y build-essential asciidoc binutils bzip2 gawk gettext git libncurses5-dev libz-dev patch python3 python2.7 unzip zlib1g-dev lib32gcc1 libc6-dev-i386 lib32stdc++6 subversion flex uglifyjs git-core gcc-multilib p7zip p7zip-full msmtp libssl-dev texinfo libglib2.0-dev xmlto qemu-utils upx libelf-dev autoconf automake libtool autopoint device-tree-compiler g++-multilib antlr3 gperf wget curl rename libpcap0.8-dev swig rsync
+sudo -E apt-get -qq autoremove -y --purge
+sudo -E apt-get -qq clean
+sudo timedatectl set-timezone "$TZ"
+sudo mkdir -p /${matrixtarget}
+sudo chown $USER:$GROUPS /${matrixtarget}
+if [[ "${matrixtarget}" == "openwrt_amlogic" ]]; then
+docker rmi $(docker images -q)
+sudo -E apt-get remove -y --purge azure-cli ghc zulu* hhvm llvm* firefox google* dotnet* powershell mysql* php* mssql-tools msodbcsql17 android*
+sudo rm -rf /etc/mysql /etc/php /swapfile
+fi
+}
+
+function Diy_variable() {
+cp -Rf `find ./ -maxdepth 1 -type d ! -path './openwrt' ! -path './'` openwrt
+echo "HOME_PATH=${GITHUB_WORKSPACE}/openwrt" >> $GITHUB_ENV
+echo "BUILD_PATH=${GITHUB_WORKSPACE}/openwrt/build/${matrixtarget}" >> $GITHUB_ENV
+echo "BASE_PATH=${GITHUB_WORKSPACE}/openwrt/package/base-files/files" >> $GITHUB_ENV
+echo "NETIP=${GITHUB_WORKSPACE}/openwrt/package/base-files/files/etc/networkip" >> $GITHUB_ENV
+echo "DELETE=${GITHUB_WORKSPACE}/openwrt/package/base-files/files/etc/deletefile" >> $GITHUB_ENV
+echo "Convert_path=${GITHUB_WORKSPACE}/openwrt/build/common/Convert" >> $GITHUB_ENV
+echo "Upgrade_Date=$(date +%Y%m%d%H%M)" >> $GITHUB_ENV
+echo "Firmware_Date=$(date +%Y-%m%d-%H%M)" >> $GITHUB_ENV
+echo "Compte_Date=$(date +%Y年%m月%d号%H时%M分)" >> $GITHUB_ENV
+echo "Tongzhi_Date=$(date +%Y年%m月%d日)" >> $GITHUB_ENV
+
+
+# github用的变量，如果有修改，下面Bendi_variable也要同步修改
+
+if [[ "${REPO_BRANCH}" == "master" ]]; then
+  echo "ZZZ_PATH=${GITHUB_WORKSPACE}/openwrt/package/lean/default-settings/files/zzz-default-settings" >> $GITHUB_ENV
+  if [[ ! -f "${GITHUB_WORKSPACE}/openwrt/package/lean/default-settings/files/zzz-default-settings" ]]; then
+    TIME r "上游源码作者修改了zzz-default-settings文件的路径或者名称，找编译脚本的作者及时修改"
+    exit 1
+  fi
+  echo "SOURCE=Lede" >> $GITHUB_ENV
+  echo "LUCI_EDITION=18.06" >> $GITHUB_ENV
+  echo "MAINTAIN=Lean's" >> $GITHUB_ENV
+elif [[ "${REPO_BRANCH}" == "22.03" ]]; then
+  echo "ZZZ_PATH=${GITHUB_WORKSPACE}/openwrt/package/default-settings/files/zzz-default-settings" >> $GITHUB_ENV
+  if [[ ! -f "${GITHUB_WORKSPACE}/openwrt/package/default-settings/files/zzz-default-settings" ]]; then
+    TIME r "上游源码作者修改了zzz-default-settings文件的路径或者名称，找编译脚本的作者及时修改"
+    exit 1
+  fi
+  echo "SOURCE=Lienol" >> $GITHUB_ENV
+  echo "LUCI_EDITION=22.03" >> $GITHUB_ENV
+  echo "MAINTAIN=Lienol's" >> $GITHUB_ENV
+elif [[ "${REPO_BRANCH}" == "openwrt-18.06" ]]; then
+  echo "ZZZ_PATH=${GITHUB_WORKSPACE}/openwrt/package/emortal/default-settings/files/99-default-settings" >> $GITHUB_ENV
+  if [[ ! -f "${GITHUB_WORKSPACE}/openwrt/package/emortal/default-settings/files/99-default-settings" ]]; then
+    TIME r "上游源码作者修改了zzz-default-settings文件的路径或者名称，找编译脚本的作者及时修改"
+    exit 1
+  fi
+  echo "SOURCE=Tianling" >> $GITHUB_ENV
+  echo "LUCI_EDITION=18.06" >> $GITHUB_ENV
+  echo "MAINTAIN=CTCGFW's" >> $GITHUB_ENV
+elif [[ "${REPO_BRANCH}" == "openwrt-21.02" ]]; then
+  echo "ZZZ_PATH=${GITHUB_WORKSPACE}/openwrt/package/emortal/default-settings/files/99-default-settings" >> $GITHUB_ENV
+  if [[ ! -f "${GITHUB_WORKSPACE}/openwrt/package/emortal/default-settings/files/99-default-settings" ]]; then
+    TIME r "上游源码作者修改了zzz-default-settings文件的路径或者名称，找编译脚本的作者及时修改"
+    exit 1
+  fi
+  echo "SOURCE=Mortal" >> $GITHUB_ENV
+  echo "LUCI_EDITION=21.02" >> $GITHUB_ENV
+  echo "MAINTAIN=CTCGFW's" >> $GITHUB_ENV
+else
+  echo "没发现该源码的分支，如果您没更改过的话，应该是上游仓库修改了，请同步上游仓库"
+  exit 1
+fi
+}
+
+function Bendi_variable() {
+# 本地用的变量，如果上面Diy_variable有修改，下面也要同步修改
+if [[ "${matrixtarget}" == "Lede_source" ]]; then
+  export ZZZ_PATH="${HOME_PATH}/package/lean/default-settings/files/zzz-default-settings"
+  if [[ ! -f "${ZZZ_PATH}" ]]; then
+    TIME r "上游源码作者修改了zzz-default-settings文件的路径或者名称，找编译脚本的作者及时修改"
+    exit 1
+  fi
+  export SOURCE="Lede"
+  export LUCI_EDITION="18.06"
+elif [[ "${matrixtarget}" == "Lienol_source" ]]; then
+  export ZZZ_PATH="${HOME_PATH}/package/default-settings/files/zzz-default-settings"
+  if [[ ! -f "${ZZZ_PATH}" ]]; then
+    TIME r "上游源码作者修改了zzz-default-settings文件的路径或者名称，找编译脚本的作者及时修改"
+    exit 1
+  fi
+  export SOURCE="Lienol"
+  export LUCI_EDITION="22.03"
+elif [[ "${matrixtarget}" == "Tianling_source" ]]; then
+  export ZZZ_PATH="${HOME_PATH}/package/emortal/default-settings/files/99-default-settings"
+  if [[ ! -f "${ZZZ_PATH}" ]]; then
+    TIME r "上游源码作者修改了zzz-default-settings文件的路径或者名称，找编译脚本的作者及时修改"
+    exit 1
+  fi
+  export SOURCE="Tianling"
+  export LUCI_EDITION="18.06"
+elif [[ "${matrixtarget}" == "Mortal_source" ]]; then
+  export ZZZ_PATH="${HOME_PATH}/package/emortal/default-settings/files/99-default-settings"
+  if [[ ! -f "${ZZZ_PATH}" ]]; then
+    TIME r "上游源码作者修改了zzz-default-settings文件的路径或者名称，找编译脚本的作者及时修改"
+    exit 1
+  fi
+  export SOURCE="Mortal"
+  export LUCI_EDITION="21.02"
+elif [[ "${matrixtarget}" == "openwrt_amlogic" ]]; then
+  export ZZZ_PATH="${HOME_PATH}/package/lean/default-settings/files/zzz-default-settings"
+  if [[ ! -f "${ZZZ_PATH}" ]]; then
+    TIME r "上游源码作者修改了zzz-default-settings文件的路径或者名称，找编译脚本的作者及时修改"
+    exit 1
+  fi
+  export SOURCE="Lede"
+  export LUCI_EDITION="18.06"
+fi
 }
 
 function Diy_feeds() {
@@ -164,12 +241,14 @@ case "${REPO_BRANCH}" in
 master)
   
   # 给固件LUCI做个标记
+  sed -i '/DISTRIB_RECOGNIZE/d' "$BASE_PATH/etc/openwrt_release"
   echo -e "\nDISTRIB_RECOGNIZE='18'" >> "$BASE_PATH/etc/openwrt_release" && sed -i '/^\s*$/d' "$BASE_PATH/etc/openwrt_release"
 
 ;;
 22.03)
   
   # 给固件LUCI做个标记
+  sed -i '/DISTRIB_RECOGNIZE/d' "$BASE_PATH/etc/openwrt_release"
   echo -e "\nDISTRIB_RECOGNIZE='20'" >> "$BASE_PATH/etc/openwrt_release" && sed -i '/^\s*$/d' "$BASE_PATH/etc/openwrt_release"
   
   # 给源码增加passwall为默认自选
@@ -184,6 +263,7 @@ master)
 openwrt-18.06)
   
   # 给固件LUCI做个标记
+  sed -i '/DISTRIB_RECOGNIZE/d' "$BASE_PATH/etc/openwrt_release"
   echo -e "\nDISTRIB_RECOGNIZE='18'" >> "$BASE_PATH/etc/openwrt_release" && sed -i '/^\s*$/d' "$BASE_PATH/etc/openwrt_release"
   
   # 给源码增加luci-app-ssr-plus为默认自选
@@ -198,6 +278,7 @@ openwrt-18.06)
 openwrt-21.02)
   
   # 给固件LUCI做个标记
+  sed -i '/DISTRIB_RECOGNIZE/d' "$BASE_PATH/etc/openwrt_release"
   echo -e "\nDISTRIB_RECOGNIZE='20'" >> "$BASE_PATH/etc/openwrt_release" && sed -i '/^\s*$/d' "$BASE_PATH/etc/openwrt_release"
   
   # 给源码增加luci-app-ssr-plus为默认自选
@@ -266,9 +347,9 @@ if [[ "${matrixtarget}" == "openwrt_amlogic" ]]; then
     sed -i "/DEFAULT_PACKAGES/ s/$/ $x/" $HOME_PATH/target/linux/armvirt/Makefile
   done
 
-  # luci-app-cpufreq修改一些代码适配amlogic
+  echo "修改luci-app-cpufreq一些代码适配amlogic"
   sed -i 's/LUCI_DEPENDS.*/LUCI_DEPENDS:=\@\(arm\|\|aarch64\)/g' $HOME_PATH/feeds/luci/applications/luci-app-cpufreq/Makefile
-  # 为 armvirt 添加 autocore 支持
+  echo "为 armvirt 添加 autocore 支持"
   sed -i 's/TARGET_rockchip/TARGET_rockchip\|\|TARGET_armvirt/g' $HOME_PATH/package/lean/autocore/Makefile
 fi
 }
@@ -615,11 +696,11 @@ rm -rf $HOME_PATH/files/{LICENSE,README,REA*.md}
 }
 
 function Diy_zzz() {
-echo "正在执行：在default-settings文件加条执行命令"
+echo "正在执行：在zzz-default-settings文件加条执行命令"
 
 curl -fsSL https://raw.githubusercontent.com/shidahuilang/common/main/Custom/FinishIng.sh > $BASE_PATH/etc/FinishIng.sh
 if [[ $? -ne 0 ]]; then
-  wget -q -O FinishIng.sh -P $BASE_PATH/etc https://raw.githubusercontent.com/shidahuilang/common/main/Custom/FinishIng.sh
+  wget -q -O FinishIng.sh -P $BASE_PATH/etc https://raw.githubusercontent.com/2shidahuilang/common/main/Custom/FinishIng.sh
 fi
 chmod 775 $BASE_PATH/etc/FinishIng.sh
 curl -fsSL https://raw.githubusercontent.com/shidahuilang/common/main/Custom/webweb.sh > $BASE_PATH/etc/webweb.sh
@@ -630,11 +711,14 @@ chmod 775 $BASE_PATH/etc/webweb.sh
 sed -i '/webweb.sh/d' "$ZZZ_PATH"
 sed -i "/exit 0/i\source /etc/webweb.sh" "$ZZZ_PATH"
 
+sed -i '/etc\/init.d\/uhttpd\ restart/d' "$BASE_PATH/etc/rc.local"
+sed -i "/exit 0/i\/etc/init.d/uhttpd restart" "$BASE_PATH/etc/rc.local"
+
 sed -i '/etc\/init.d\/network\ restart/d' "$BASE_PATH/etc/rc.local"
 sed -i "/exit 0/i\/etc/init.d/network restart" "$BASE_PATH/etc/rc.local"
 
-sed -i '/etc\/init.d\/uhttpd\ restart/d' "$BASE_PATH/etc/rc.local"
-sed -i "/exit 0/i\/etc/init.d/uhttpd restart" "$BASE_PATH/etc/rc.local"
+sed -i '/service dnsmasq restart/d' "$BASE_PATH/etc/rc.local"
+sed -i "/exit 0/i\service dnsmasq restart" "$BASE_PATH/etc/rc.local"
 
 sed -i '/FinishIng.sh/d' "$BASE_PATH/etc/rc.local"
 sed -i "/exit 0/i\[[ -f '/etc/FinishIng.sh' ]] && source /etc/FinishIng.sh" "$BASE_PATH/etc/rc.local"
@@ -740,6 +824,7 @@ sed -i 's|[[:space:]]||g; s|^.||' CPU && sed -i 's|CPU||g; s|pucores:||' CPU
 CPUNAME="$(awk 'NR==1' CPU)" && CPUCORES="$(awk 'NR==2' CPU)"
 rm -rf CPU
 
+
 if [[ "${REPO_BRANCH}" == "openwrt-18.06" ]] || [[ "${REPO_BRANCH}" == "openwrt-21.02" ]]; then
   export KERNEL_PATC=""
   export KERNEL_PATC="$(egrep KERNEL_PATCHVER:=[0-9]+\.[0-9]+ $HOME_PATH/target/linux/${TARGET_BOARD}/Makefile |cut -d "=" -f2)"
@@ -837,7 +922,7 @@ elif [[ "${REGULAR_UPDATE}" == "true" ]] && [[ -n "${REPO_TOKEN}" ]]; then
   TIME b "云端路径: ${Github_Release}"
   TIME g "《编译成功后，会自动把固件发布到指定地址，然后才会生成云端路径》"
   TIME g "《普通的那个发布固件跟云端的发布路径是两码事，如果你不需要普通发布的可以不用打开发布功能》"
-  TIME g "修改IP、DNS、网关或者在线更新，请输入命令：openwrt"
+  TIME g "修改IP、DNS、网关或者在线更新，请输入命令：openwrt或者tools"
   echo
 else
   echo
@@ -888,7 +973,6 @@ fi
 }
 
 function Diy_menu() {
-Diy_settings
 if [[ ! ${Tishi} == "1" ]]; then
   Diy_feeds
 fi
