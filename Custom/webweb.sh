@@ -39,7 +39,7 @@ if [[ -f /etc/config/argon ]]; then
   uci commit argon
 fi
 
-sed -i '/danshui/d' /etc/opkg/distfeeds.conf
+sed -i '/dahuilang/d' /etc/opkg/distfeeds.conf
 sed -i '/helloworld/d' /etc/opkg/distfeeds.conf
 sed -i '/passwall/d' /etc/opkg/distfeeds.conf
 
