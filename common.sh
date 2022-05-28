@@ -195,17 +195,18 @@ elif [[ "${matrixtarget}" == "openwrt_amlogic" ]]; then
 fi
 }
 
-function Diy_feeds() {
+function Diy_clean() {
 echo "正在执行：更新插件源,让源码更多插件存在"
 # 拉库和做标记
 
-./scripts/feeds clean && ./scripts/feeds update -a > /dev/null 2>&1
+./scripts/feeds clean
+./scripts/feeds update -a > /dev/null 2>&1
 
 case "${REPO_BRANCH}" in
 master)
   
   # 删除重复插件（LEDE）
-  find . -name 'luci-app-netdata' -o -name 'netdata' -o -name 'luci-theme-argon' -o -name 'mentohust' | xargs -i rm -rf {}
+  find . -name 'luci-theme-argon' -o -name 'mentohust' | xargs -i rm -rf {}
   find . -name 'luci-app-wrtbwmon' -o -name 'wrtbwmon' -o -name 'luci-app-eqos' | xargs -i rm -rf {}
   find . -name 'adguardhome' -o -name 'luci-app-adguardhome' -o -name 'luci-app-wol' | xargs -i rm -rf {}
 
@@ -213,15 +214,16 @@ master)
 22.03)
   
   # 删除重复插件（Lienol-22.03）
-  find . -name 'luci-app-netdata' -o -name 'netdata' -o -name 'luci-app-ttyd' -o -name 'luci-app-eqos' -o -name 'luci-theme-argon' | xargs -i rm -rf {}
-  find . -name 'adguardhome' -o -name 'luci-app-adguardhome' -o -name 'luci-app-wol' -o -name 'luci-app-dockerman' | xargs -i rm -rf {}
+  find . -name 'luci-app-ttyd' -o -name 'luci-app-eqos' -o -name 'luci-theme-argon' | xargs -i rm -rf {}
+  find . -name 'adguardhome' -o -name 'luci-app-adguardhome' -o -name 'luci-app-wol' -o -name 'luci-app-dockerman' -o -name 'luci-app-frpc' | xargs -i rm -rf {}
+  find . -name 'luci-app-wrtbwmon' -o -name 'wrtbwmon' | xargs -i rm -rf {}
 
 ;;
 openwrt-18.06)
 
   # 删除重复插件（天灵18.06）
   find . -name 'luci-app-argon-config' -o -name 'luci-theme-argon' -o -name 'luci-theme-argonv3' -o -name 'luci-app-eqos' | xargs -i rm -rf {}
-  find . -name 'luci-app-netdata' -o -name 'netdata' -o -name 'luci-app-cifs' | xargs -i rm -rf {}
+  find . -name 'luci-app-cifs' | xargs -i rm -rf {}
   find . -name 'luci-app-wrtbwmon' -o -name 'wrtbwmon' -o -name 'luci-app-wol' | xargs -i rm -rf {}
   find . -name 'luci-app-adguardhome' -o -name 'adguardhome' -o -name 'luci-theme-opentomato' | xargs -i rm -rf {}
 
@@ -229,8 +231,9 @@ openwrt-18.06)
 openwrt-21.02)
 
   # 删除重复插件（天灵21.02）
-  find . -name 'luci-app-netdata' -o -name 'netdata' -o -name 'luci-app-cifs' -o -name 'luci-app-eqos' -o -name 'luci-theme-argon' | xargs -i rm -rf {}
+  find . -name 'luci-app-cifs' -o -name 'luci-app-eqos' -o -name 'luci-theme-argon' | xargs -i rm -rf {}
   find . -name 'luci-app-adguardhome' -o -name 'adguardhome' -o -name 'luci-app-wol' | xargs -i rm -rf {}
+  find . -name 'luci-app-wrtbwmon' -o -name 'wrtbwmon' | xargs -i rm -rf {}
 
 ;;
 esac
@@ -315,18 +318,110 @@ chmod 777 $BASE_PATH/sbin/openwrt
 
 function Diy_Lede() {
 echo "正在执行：Lede专用自定义"
+cat >>"${KEEPD}" <<-EOF
+/mnt/network
+/mnt/Detectionnetwork
+/etc/config/AdGuardHome.yaml
+/www/luci-static/argon/background
+EOF
 }
 
 function Diy_Lienol() {
 echo "正在执行：Lienol专用自定义"
-}
-
-function Diy_Tianling() {
-echo "正在执行：Tianling专用自定义"
+cat >>"${KEEPD}" <<-EOF
+/mnt/network
+/mnt/Detectionnetwork
+/etc/config/AdGuardHome.yaml
+/www/luci-static/argon/background
+EOF
 }
 
 function Diy_Mortal() {
 echo "正在执行：Mortal专用自定义"
+cat >>"${KEEPD}" <<-EOF
+/mnt/network
+/mnt/Detectionnetwork
+/etc/config/AdGuardHome.yaml
+/www/luci-static/argon/background
+EOF
+
+sed -i '/DISTRIB_RELEAS/d' "$ZZZ_PATH"
+sed -i '/DISTRIB_REVISION/d' "$ZZZ_PATH"
+sed -i '/DISTRIB_DESCRIPTION/d' "$ZZZ_PATH"
+sed -i '/exit 0/d' "$ZZZ_PATH"
+sed -i "s?main.lang=.*?main.lang='zh_cn'?g" "$ZZZ_PATH"
+cat >>"$ZZZ_PATH" <<-EOF
+sed -i '/DISTRIB_RELEAS/d' /etc/openwrt_release
+echo "DISTRIB_RELEASE='SNAPSHOT'" >> /etc/openwrt_release
+sed -i '/DISTRIB_REVISION/d' /etc/openwrt_release
+echo "DISTRIB_REVISION='21.02'" >> /etc/openwrt_release
+sed -i '/DISTRIB_DESCRIPTION/d' /etc/openwrt_release
+echo "DISTRIB_DESCRIPTION='OpenWrt '" >> /etc/openwrt_release
+sed -i '/luciname/d' /usr/lib/lua/luci/version.lua
+sed -i '/luciversion/d' /usr/lib/lua/luci/version.lua
+echo "luciname    = \"Immortalwrt-21.02\"" >> /usr/lib/lua/luci/version.lua
+exit 0
+EOF
+
+ttydjson="$HOME_PATH/feeds/luci/applications/luci-app-ttyd/root/usr/share/luci/menu.d/luci-app-ttyd.json"
+if [[ -f "${ttydjson}" ]]; then
+cat >"${ttydjson}" <<-EOF
+{
+	"admin/system/ttyd": {
+		"title": "Terminal",
+		"order": 10,
+		"action": {
+			"type": "firstchild"
+		},
+		"depends": {
+			"acl": [ "luci-app-ttyd" ],
+			"uci": { "ttyd": true }
+		}
+	},
+	"admin/system/ttyd/ttyd": {
+		"title": "Terminal",
+		"order": 1,
+		"action": {
+			"type": "view",
+			"path": "ttyd/term"
+		}
+	},
+	"admin/system/ttyd/config": {
+		"title": "Config",
+		"order": 2,
+		"action": {
+			"type": "view",
+			"path": "ttyd/config"
+		}
+	}
+}
+EOF
+fi
+}
+
+function Diy_Tianling() {
+echo "正在执行：Tianling专用自定义"
+cat >>"${KEEPD}" <<-EOF
+/mnt/network
+/mnt/Detectionnetwork
+/etc/config/AdGuardHome.yaml
+/www/luci-static/argon/background
+EOF
+
+sed -i '/DISTRIB_RELEAS/d' "$ZZZ_PATH"
+sed -i '/DISTRIB_REVISION/d' "$ZZZ_PATH"
+sed -i '/DISTRIB_DESCRIPTION/d' "$ZZZ_PATH"
+sed -i '/exit 0/d' "$ZZZ_PATH"
+sed -i "s?main.lang=.*?main.lang='zh_cn'?g" "$ZZZ_PATH"
+cat >>"$ZZZ_PATH" <<-EOF
+sed -i '/DISTRIB_RELEAS/d' /etc/openwrt_release
+echo "DISTRIB_RELEASE='SNAPSHOT'" >> /etc/openwrt_release
+sed -i '/DISTRIB_REVISION/d' /etc/openwrt_release
+echo "DISTRIB_REVISION='immortalwrt-18.06'" >> /etc/openwrt_release
+sed -i '/DISTRIB_DESCRIPTION/d' /etc/openwrt_release
+echo "DISTRIB_DESCRIPTION='OpenWrt '" >> /etc/openwrt_release
+exit 0
+EOF
 }
 
 function Diy_amlogic() {
