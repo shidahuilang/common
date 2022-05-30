@@ -855,12 +855,31 @@ TIME b "源码分支: ${REPO_BRANCH}"
 TIME b "源码作者: ${MAINTAIN}"
 TIME b "内核版本: ${LINUX_KERNEL}"
 TIME b "Luci版本: ${LUCI_EDITION}"
-TIME b "编译机型: ${TARGET_DHL}"
+if [[ "${matrixtarget}" == "openwrt_amlogic" ]]; then
+  TIME b "编译机型: 晶晨系列"
+  if [[ "${AUTOMATIC_AMLOGIC}" == "true" ]]; then
+    if [[ -f "${AMLOGIC_SH_PATH}" ]]; then
+      amlogic_model="$(grep "amlogic_model=" "${AMLOGIC_SH_PATH}" 2>&1 | cut -d "=" -f2 |sed 's/ [  \t]*$//g' |sed 's/\"//g' |sed "s/'//g")"
+      [[ -z "${amlogic_model}" ]] && amlogic_model="填写格式错误,未获取到数据,脚本默认打包全机型"
+      amlogic_kernel="$(grep "amlogic_kernel=" "${AMLOGIC_SH_PATH}" 2>&1 | cut -d "=" -f2 |sed 's/ [  \t]*$//g' |sed 's/\"//g' |sed "s/'//g")"
+      [[ -z "${amlogic_kernel}" ]] && amlogic_kernel="填写格式错误,未获取到数据,脚本默认5.15.xx"
+      rootfs_size="$(grep "rootfs_size=" "${AMLOGIC_SH_PATH}" 2>&1 | cut -d "=" -f2 |sed 's/ [  \t]*$//g' |sed 's/\"//g' |sed "s/'//g")"
+      [[ -z "${rootfs_size}" ]] && rootfs_size="填写格式错误,未获取到数据,脚本默认1024"
+      TIME g "打包机型: ${amlogic_model}"
+      TIME g "打包内核: ${amlogic_kernel}"
+      TIME g "分区大小: ${rootfs_size}"
+    else
+      TIME r "打包数据：没发现打包数据文件存在，使用脚本默认数值打包"
+    fi
+  fi
+else
+  TIME b "编译机型: ${TARGET_PROFILE}"
+fi
 TIME b "固件作者: ${Author}"
 TIME b "仓库地址: ${Github}"
 TIME b "启动编号: #${Run_number}（${Library}仓库第${Run_number}次启动[${Run_workflow}]工作流程）"
 TIME b "编译时间: ${Compte_Date}"
-TIME g "友情提示：您当前使用【${matrixtarget}】文件夹编译【${TARGET_DHL}】固件"
+TIME g "友情提示：您当前使用【${matrixtarget}】文件夹编译【${TARGET_PROFILE}】固件"
 echo
 echo
 if [[ ${UPLOAD_FIRMWARE} == "true" ]]; then
