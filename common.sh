@@ -705,7 +705,7 @@ echo "正在执行：在zzz-default-settings文件加条执行命令"
 
 curl -fsSL https://raw.githubusercontent.com/shidahuilang/common/main/Custom/FinishIng.sh > $BASE_PATH/etc/FinishIng.sh
 if [[ $? -ne 0 ]]; then
-  wget -q -O FinishIng.sh -P $BASE_PATH/etc https://raw.githubusercontent.com/2shidahuilang/common/main/Custom/FinishIng.sh
+  wget -q -O FinishIng.sh -P $BASE_PATH/etc https://raw.githubusercontent.com/shidahuilang/common/main/Custom/FinishIng.sh
 fi
 chmod 775 $BASE_PATH/etc/FinishIng.sh
 curl -fsSL https://raw.githubusercontent.com/shidahuilang/common/main/Custom/webweb.sh > $BASE_PATH/etc/webweb.sh
