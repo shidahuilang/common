@@ -1035,16 +1035,21 @@ fi
 }
 
 function Diy_menu() {
-if [[ ! ${ERCI_BYGJ} == "1" ]]; then
-  Diy_clean
+if [[ ! ${Tishi} == "1" ]]; then
+  Diy_feeds
 fi
 Diy_conf
-Diy_webweb
 Diy_${SOURCE}
 Diy_amlogic
-Diy_part_sh
+/bin/bash $BUILD_PATH/$DIY_PART_SH
 Diy_indexhtm
 Diy_patches
 Diy_upgrade1
-Diy_feeds
+
+echo "正在执行：更新feeds,请耐心等待..."
+./scripts/feeds update -a
+./scripts/feeds install -a > /dev/null 2>&1
+./scripts/feeds install -a
+mv $BUILD_PATH/$CONFIG_FILE .config
+make defconfig > /dev/null 2>&1
 }
