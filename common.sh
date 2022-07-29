@@ -986,6 +986,7 @@ Plug_in2="$(echo "${Plug_in}" | grep -v '^#' |sed '/INCLUDE/d' |sed '/=m/d' |sed
 echo "${Plug_in2}" >Plug-in
 CPUNAME="$(cat /proc/cpuinfo |grep 'model name' |awk 'END {print}' |cut -f2 -d: |sed 's/^[ ]*//g')"
 CPUCORES="$(cat /proc/cpuinfo | grep 'cpu cores' |awk 'END {print}' | cut -f2 -d: | sed 's/^[ ]*//g')"
+sed -i '/qbittorrent-simple_dynamic/d' Plug-in > /dev/null 2>&1
 
 if [[ "${REPO_BRANCH}" == "openwrt-18.06" ]] || [[ "${REPO_BRANCH}" == "openwrt-21.02" ]]; then
   export KERNEL_PATC=""
