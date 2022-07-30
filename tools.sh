@@ -3,7 +3,7 @@
 # AutoBuild_Tools for Openwrt
 # Dependences: bash wget curl block-mount e2fsprogs smartmontools
 
-Version=V1.8.3
+Version=V1.8.8
 
 ECHO() {
 	case $1 in
@@ -28,7 +28,7 @@ ${Grey}OpenWrt固件工具箱
 1. USB 空间扩展			6. 环境修复
 2. Samba 设置			7. 系统信息监控
 3. 端口占用列表			8. 在线设备列表
-4. 硬盘信息
+4. 硬盘信息			9. 创建虚拟内存 (swap)
 5. 网络检查
 
 ${Grey}u. 固件更新
@@ -42,19 +42,20 @@ ${White}q. 退出
 		exit 0
 	;;
 	u)
-		[ -s ${AutoUpdate_File} ] && {
+		[[ -s ${AutoUpdate_File} ]] && {
 			AutoUpdate_UI
 		} || {
-			ECHO r "\n未检测到 '/bin/AutoUpdate.sh',请确保当前固件支持一键更新!"
+			ECHO r "\n未检测到 ${AutoUpdate_File}, 请确保当前固件支持定时更新!"
 			sleep 2
 		}
 	;;
 	x)
-		wget -q ${Github_Raw}/Scripts/AutoBuild_Tools.sh -O ${Tools_Cache}/AutoBuild_Tools.sh
-		if [[ $? == 0 && -s ${Tools_Cache}/AutoBuild_Tools.sh ]];then
+		wget -q ${Github_Raw}/CustomFiles/Depends/tools -O ${Tools_Cache}/tools
+		if [[ $? == 0 && -s ${Tools_Cache}/tools ]]
+		then
 			ECHO y "\n[AutoBuild_Tools] 脚本更新成功!"
 			rm -f ${Tools_File}
-			mv -f ${Tools_Cache}/AutoBuild_Tools.sh ${Tools_File}
+			mv -f ${Tools_Cache}/tools ${Tools_File}
 			chmod +x ${Tools_File}
 			sleep 2
 			exec ${Tools_File}
@@ -64,75 +65,53 @@ ${White}q. 退出
 		fi
 	;;
 	1)
-		[[ ! $(CHECK_PKG block) == true ]] && {
-			ECHO r "\n缺少相应依赖包,请先安装 [block-mount] !"
-			sleep 2
-		} || AutoExpand_UI
+		if_PKG_Depends block lsblk mkfs.ext4:e2fsprogs && AutoExpand_UI
 	;;
 	2)
-		[[ ! $(CHECK_PKG block) == true ]] && {
-			ECHO r "\n缺少相应依赖包,请先安装 [block-mount] !"
-			sleep 2
-			return
-		}
-		[[ ! $(CHECK_PKG smbpasswd) == true ]] && {
-			ECHO r "\n缺少相应依赖包,请先安装 [samba] !"
-			sleep 2
-			return
-		}
-		Samba_UI
+		if_PKG_Depends smbpasswd:samba block && Samba_UI
 	;;
 	3)
-		ECHO y "\nLoading Service Configuration ..."
-		Netstat1=${Tools_Cache}/Netstat1
-		Netstat2=${Tools_Cache}/Netstat2
-		ps_Info=${Tools_Cache}/ps_Info
-		rm -f ${Netstat2} && touch -a ${Netstat2}
-		netstat -ntupa | egrep ":::[0-9].+|0.0.0.0:[0-9]+|127.0.0.1:[0-9]+" | awk '{print $1" "$4" "$6" "$7}' | sed -r 's/0.0.0.0:/\1/;s/:::/\1/;s/127.0.0.1:/\1/;s/LISTEN/\1/' | sort | uniq > ${Netstat1}
-		ps -w > ${ps_Info}
-		local i=1;while :;do
-			Proto=$(sed -n ${i}p ${Netstat1} | awk '{print $1}')
-			[[ -z ${Proto} ]] && break
-			Port=$(sed -n ${i}p ${Netstat1} | awk '{print $2}')
-			_Service=$(sed -n ${i}p ${Netstat1} | awk '{print $3}')
-			[[ ${_Service} == '-' ]] && {
-				Service="Unknown"
-			} || {
-				Service=$(echo ${_Service} | cut -d '/' -f2)
-				PID=$(echo ${_Service} | cut -d '/' -f1)
-				Task=$(grep -v "grep" ${ps_Info} | grep "${PID}" | awk '{print $5}')
-			}
-			i=$(($i + 1))
-			echo -e "${Proto} ${Port} ${Service} ${PID} ${Task}" | egrep "tcp|udp" >> ${Netstat2}
-		done
-		clear
-		ECHO x "端口占用列表\n"
-		printf "${Yellow}%-10s %-16s %-22s %-12s %-40s\n${White}" 协议 占用端口 服务名称 PID 进程信息
-		local X;while read X;do
-			printf "%-8s %-12s %-18s %-12s %-40s\n" ${X}
-		done < ${Netstat2}
-		ENTER
+		if_PKG_Depends netstat && {
+			ECHO y "\nLoading Service Configuration ..."
+			Netstat1=${Tools_Cache}/Netstat1
+			Netstat2=${Tools_Cache}/Netstat2
+			ps_Info=${Tools_Cache}/ps_Info
+			rm -f ${Netstat2} && touch -a ${Netstat2}
+			netstat -ntupa | grep -v "::ffff" |egrep ":::[0-9].+|0.0.0.0:[0-9]+|127.0.0.1:[0-9]+" | awk '{print $1" "$4" "$6" "$7}' | sed -r 's/0.0.0.0:/\1/;s/:::/\1/;s/127.0.0.1:/\1/;s/LISTEN/\1/' | sort | uniq > ${Netstat1}
+			ps -efww > ${ps_Info}
+			local i=1;while :;do
+				Proto=$(sed -n ${i}p ${Netstat1} | awk '{print $1}')
+				[[ -z ${Proto} ]] && break
+				Port=$(sed -n ${i}p ${Netstat1} | awk '{print $2}')
+				_Service=$(sed -n ${i}p ${Netstat1} | awk '{print $3}')
+				[[ ${_Service} == '-' ]] && {
+					Service="Unknown"
+				} || {
+					Service=$(echo ${_Service} | cut -d '/' -f2)
+					PID=$(echo ${_Service} | cut -d '/' -f1)
+					Task=$(grep -v "grep" ${ps_Info} | grep "${PID}" | awk '{print $5}')
+				}
+				i=$(($i + 1))
+				echo -e "${Proto} ${Port} ${Service} ${PID} ${Task}" | egrep "tcp|udp" >> ${Netstat2}
+			done
+			clear
+			ECHO x "端口占用列表\n"
+			printf "${Grey}%-10s %-16s %-22s %-12s %-40s\n${White}" 协议 占用端口 服务名称 PID 进程信息
+			local X;while read X;do
+				printf "%-8s %-12s %-18s %-12s %-40s\n" ${X}
+			done < ${Netstat2}
+			ENTER
+		}
 	;;
 	4)
-		[[ ! $(CHECK_PKG smartctl) == true ]] && {
-			ECHO r "\n缺少相应依赖包,请先安装 [smartmontools] !"
-			sleep 2
-		} || SmartInfo_UI
+		if_PKG_Depends smartctl:smartmontools && SmartInfo_UI
 	;;
 	5)
-		if [[ $(CHECK_PKG curl) == true ]];then
-			ping 223.5.5.5 -c 1 -W 2 > /dev/null 2>&1
-			[[ $? == 0 ]] && {
-				ECHO y "\n基础网络连接正常!"
-			} || {
-				ECHO r "\n基础网络连接错误!"
-			}
-			ping www.baidu.com -c 1 -W 2 > /dev/null 2>&1
-			[[ $? == 0 ]] && {
-				ECHO y "Baidu 连接正常!"
-			} || {
-				ECHO r "Baidu 连接错误!"
-			}
+		if_PKG_Depends curl nslookup&& {
+			ping 223.5.5.5 -c 1 -W 2 > /dev/null 2>&1 && \
+				ECHO y "\n基础网络连接正常!" || ECHO r "\n基础网络连接错误!"
+			nslookup -type=a 163.com > /dev/null 2>&1 && \
+				ECHO y "基础 IPv4 DNS 解析正常!" || ECHO r "基础 IPv4 DNS 解析错误!"
 			Google_Check=$(curl -I -s --connect-timeout 3 google.com -w %{http_code} | tail -n1)
 			case ${Google_Check} in
 			301)
@@ -142,18 +121,17 @@ ${White}q. 退出
 				ECHO r "Google 连接错误!"
 			;;
 			esac
-		else
-			ECHO r "\n缺少相应依赖包,请先安装 [curl] !"
-		fi
-		sleep 2
+			sleep 2
+		}
 	;;
 	6)
-		cp -a /rom/etc/AutoBuild/Default_Variable /etc/AutoBuild
 		cp -a /rom/etc/profile /etc
 		cp -a /rom/etc/banner /etc
 		cp -a /rom/etc/openwrt_release /etc
-		cp -a /rom/bin/AutoUpdate.sh ${AutoUpdate_File}
-		cp -a /rom/bin/AutoBuild_Tools.sh ${Tools_File}
+		cp -a /rom/etc/autoupdate/default /etc/autoupdate
+		cp -a /rom/bin/autoupdate ${AutoUpdate_File}
+		chmod +x ${AutoUpdate_File}
+		cp -a /rom/bin/tools ${Tools_File}
 		cp -a /rom/etc/config/autoupdate /etc/config
 		ECHO y "\n固件环境修复完成!"
 		sleep 2
@@ -163,23 +141,77 @@ ${White}q. 退出
 	;;
 	8)
 		clear
-		Online_List="${Tools_Cache}/Online_List"
-		i=1
 		ECHO x "在线设备列表\n"
-		ECHO y "序号   MAC 地址			IP 地址			设备名称"
-		grep "br-lan" /proc/net/arp | grep "0x2" | grep -v "0x0" | grep "$(echo $(GET_IP 4) | egrep -o "[0-9]+\.[0-9]+\.[0-9]+")" | awk '{print $4"\t"$1}' | while read X;do
-			echo " ${i}     ${X}		$(grep $(echo ${X} | awk '{print $2}') /tmp/dhcp.leases | awk '{print $4}')"
+		printf "${Grey}%-8s %-24s %-20s %-10s${White}\n" 序号 "MAC 地址" "IP 地址" 设备名称
+		i=1;grep "br-lan" /proc/net/arp | grep "0x2" | grep -v "0x0" | awk '{print $4"\t"$1}' | while read X;do
+			printf " %-5s %-22s %-18s %-10s\n" ${i} ${X} $(if_Empty "$(grep $(echo ${X} | awk '{print $2}') /tmp/dhcp.leases | awk '{print $4}' | head -n 1)" 未知)
 			i=$(($i + 1))
 		done
+		unset i
 		ENTER
+	;;
+	9)
+		echo
+		read -p "请输入交换文件存放的位置:" swap_Path
+		read -p "请输入交换分区的大小:" swap_Size
+		if [[ -f ${swap_Path}/swapfile ]]
+		then
+			ECHO r "\n目录 '${swap_Path}' 下已存在交换文件 'swapfile', 且文件大小为 $(du ${swap_Path}/swapfile -h | cut -d '' -f1)
+继续操作将会覆盖该目录下原有的 swapfile 文件!\n"
+			read -p "是否继续操作?[Y/n]:" Choose
+			[[ ! ${Choose} == [Yesyes] ]] && continue
+			[[ ! -w ${swap_Path}/swapfile ]] && chmod 777 ${swap_Path}/swapfile
+			swapoff -a
+			rm -rf ${swap_Path}/swapfile
+		fi
+		ECHO y "\n开始创建 ${swap_Path}/swapfile ..."
+		dd if=/dev/zero of=${swap_Path}/swapfile bs=1M count=${swap_Size}
+		if [[ $? == 0 ]]
+		then
+			mkswap ${swap_Path}/swapfile && ECHO y "已成功创建交换文件 [${swap_Path}/swapfile], 可手动前往 '系统-挂载点' 进行设置!" || ECHO r "交换文件创建失败!"
+			chmod 0600 ${swap_Path}/swapfile
+		else
+			ECHO r "交换文件创建失败!"
+			rm -rf ${swap_Path}/swapfile
+		fi
+		sleep 3
 	;;
 	esac
 done
 }
 
+if_PKG_Depends() {
+	while [[ $1 ]];do
+		CMD=$(echo $1 | cut -d ':' -f1)
+		PKG=$(echo $1 | cut -d ':' -f2)
+		[[ -z ${PKG} ]] && PKG=${CMD}
+		if [[ $(CHECK_PKG ${CMD}) == false ]]
+		then
+			if_False=1
+			ECHO r "\n缺少软件包: [${PKG}]"
+		fi
+		shift
+	done
+	if [[ ${if_False} == 1 ]]
+	then
+		sleep 2
+		return 1
+	else
+		return 0
+	fi
+}
+
+if_Empty() {
+	if [[ $1 ]]
+	then
+		echo $1
+	else
+		echo $2
+	fi
+}
+
 AutoExpand_UI() {
-	USB_Info
-	[[ $? == 0 ]] && {
+	USB_Info && {
 		clear
 		ECHO x "USB 扩展内部空间\n"
 		printf "${Yellow}%-7s %-14s %-40s %-14s %-15s %-18s %-10s\n${White}" 编号 设备 UUID 分区格式 挂载点 可用空间 状态
@@ -209,18 +241,14 @@ AutoExpand_UI() {
 		AutoExpand_UI
 	;;
 	*)
-		[[ ${Choose} =~ [0-9] && ${Choose} -le ${Logic_Disk_Count} && ${Choose} -gt 0 ]] > /dev/null 2>&1 && {
-			if [[ $(CHECK_PKG mkfs.ext4) == true ]];then
-				Choose_Disk=$(sed -n ${Choose}p ${Disk_Processed_List} | awk '{print $2}')
-				Choose_Mount=$(grep "${Choose_Disk}" ${Disk_Processed_List} | awk '{print $5}')
-				AutoExpand_Core ${Choose_Disk} ${Choose_Mount}
-			else
-				ECHO r "\n系统缺少相应依赖包,请先安装 [e2fsprogs] !" && sleep 2
-				return
-			fi
-		} || {
+		if [[ ${Choose} =~ [0-9] && ${Choose} -le ${Logic_Disk_Count} && ${Choose} -gt 0 ]] > /dev/null 2>&1
+		then
+			Choose_Disk=$(sed -n ${Choose}p ${Disk_Processed_List} | awk '{print $2}')
+			Choose_Mount=$(grep "${Choose_Disk}" ${Disk_Processed_List} | awk '{print $5}')
+			AutoExpand_Core ${Choose_Disk} ${Choose_Mount}
+		else
 			AutoExpand_UI
-		}
+		fi
 	;;
 	esac
 }
@@ -230,10 +258,13 @@ USB_Info() {
 	Phy_Disk_List="${Tools_Cache}/Phy_Disk_List"
 	Block_Info="${Tools_Cache}/Block_Info"
 	Disk_Processed_List="${Tools_Cache}/Disk_Processed_List"
-	echo -ne "\n${Yellow}Loading USB Configuration ...${White}"
 	rm -f ${Block_Info} ${Logic_Disk_List} ${Disk_Processed_List} ${Phy_Disk_List}
 	touch ${Disk_Processed_List}
-	block mount
+	case $1 in
+	-a)
+		block mount
+	;;
+	esac
 	block info | grep -v "mtdblock" | egrep "sd[a-z][0-9]|mmcblk[0-9]+[a-z][0-9]+" > ${Block_Info}
 	[[ -s ${Block_Info} ]] && {
 		lsblk -l | grep part | awk '{print "/dev/"$1}' > ${Logic_Disk_List}
@@ -251,10 +282,10 @@ USB_Info() {
 			printf "%-3s %-14s %-40s %-14s %-15s %-18s %-10s\n" ${i} ${Disk_Name} ${UUID} ${Logic_Format} ${Logic_Mount} ${Logic_Available} >> ${Disk_Processed_List}
 			i=$(expr $i + 1 2> /dev/null)
 		done
-		lsblk | grep disk | awk '{print "/dev/"$1}' | sort | uniq > ${Phy_Disk_List}
+		lsblk | grep disk | grep -v mtdblock | awk '{print "/dev/"$1}' | sort | uniq > ${Phy_Disk_List}
 	}
 	echo -ne "\r                             \r"
-	[[ -n $(cat ${Phy_Disk_List}) ]] && return 0 || return 1
+	[[ $(cat ${Phy_Disk_List}) ]] && return 0 || return 1
 }
 
 AutoExpand_Core() {
@@ -262,31 +293,26 @@ AutoExpand_Core() {
 	ECHO r "      固件更新将改变分区表,从而导致扩容失效,当前硬盘上的数据可能会丢失"
 	echo -ne "\n${Yellow}本操作将把设备 '$1' 格式化为 ext4 格式,${White}"
 	read -p "是否确认执行格式化操作?[Y/n]:" Choose
-	[[ ${Choose} == [Yesyes] ]] && {
-		ECHO y "\n开始运行一键挂载脚本 ..."
-		sleep 2
-	} || return
+	[[ ${Choose} == [Yesyes] ]] || return 0
 	echo "禁用自动挂载 ..."
 	uci set fstab.@global[0].auto_mount='0'
 	uci commit fstab
 	[[ ! $2 == '-' ]] && {
 		echo "卸载设备 '$1' 位于 '$2' ..."
 		umount -l $2 > /dev/null 2>&1
-		[[ $? != 0 ]] && {
-			ECHO r "设备 '$2' 卸载失败!"
-			exit 1
-		}
 	}
 	echo "正在格式化设备 '$1' 为 ext4 格式,请耐心等待 ..."
-	mkfs.ext4 -F $1 > /dev/null 2>&1
-	[[ $? == 0 ]] && {
+	mkfs.ext4 -F $1 > /dev/null 2>&1 && {
 		echo "设备 '$1' 已成功格式化为 ext4 格式!"
-		USB_Info
 	} || {
 		ECHO r "设备 '$1' 格式化失败!"
 		exit 1
 	}
-	UUID=$(grep "$1" ${Disk_Processed_List} | awk '{print $2}')
+	UUID=$(block info | grep $1 | egrep -o 'UUID=".+"' | awk -F '["]' '/UUID/{print $2}')
+	[[ -z ${UUID} ]] && {
+		ECHO r "设备 '$1' UUID 获取失败!"
+		exit 1
+	}
 	echo "UUID: ${UUID}"
 	echo "挂载设备 '$1' 到 ' /tmp/extroot' ..."
 	mkdir -p /tmp/introot || {
@@ -300,12 +326,10 @@ AutoExpand_Core() {
 	mount --bind / /tmp/introot || {
 		ECHO r "绑定 '/' 到 '/tmp/introot' 失败!"
 		exit 1
-
 	}
-	mount $1 /tmp/extroot || {
+	mount -t ext4 $1 /tmp/extroot || {
 		ECHO r "挂载 '$1' 到 '/tmp/extroot' 失败!"
 		exit 1
-
 	}
 	echo "正在复制系统文件到 '$1' ..."
 	tar -C /tmp/introot -cf - . | tar -C /tmp/extroot -xf -
@@ -335,11 +359,10 @@ EOF
 }
 
 Samba_UI() {
-	USB_Info
-	Samba_tmp="${Tools_Cache}/AutoSamba"
 	[[ ! -d ${Tools_Cache} ]] && mkdir -p "${Tools_Cache}"
 	while :
 	do
+		USB_Info -a
 		autoshare_Mode="$(uci get samba.@samba[0].autoshare)"
 		clear
 		ECHO x "Samba 工具箱\n"
@@ -409,16 +432,14 @@ EOF
 			sed -i '/invalid users/d' /etc/samba/smb.conf.template >/dev/null 2>&1
 			ECHO y "\n注意: 将为 root 用户设置密码,同时自动允许 root 用户进行访问,
       请连续输入两次相同的密码,输入的内容不会显示,完成后回车即可!\n"
-			smbpasswd -a root
-			[[ $? == 0 ]] && {
+			smbpasswd -a root && {
 				ECHO y "\n已为 root 用户设置 Samba 访问密码!"
 				/etc/init.d/samba restart
-			} || {
-				ECHO r "\nSamba 访问密码设置失败!"
-			}
+			} || ECHO r "\nSamba 访问密码设置失败!"
 		;;
 		5)
-			if [ -s /etc/samba/smbpasswd ];then
+			if [[ -s /etc/samba/smbpasswd ]]
+			then
 				smbpasswd -x root
 				ECHO y "\n已删除 Samba 访问密码!"
 				/etc/init.d/samba restart
@@ -447,7 +468,7 @@ ${Red}3. 更新固件 [保留配置]${White}
 8. 打印脚本运行日志 (反馈问题)
 9. 检查 AutoUpdate 运行环境
 10. 备份系统配置
-$([ $(bash ${AutoUpdate_File} --var TARGET_BOARD) == x86 ] && echo "11. 指定下载 <UEFI | BIOS> 引导的固件\n")
+$([ $(bash ${AutoUpdate_File} --env TARGET_BOARD) == x86 ] && echo "11. 指定下载 <UEFI | BIOS> 引导的固件\n")
 ${Yellow}x. 更新 [AutoUpdate] 脚本
 ${White}q. 返回\n"
 	read -p "请从上方选择一个操作:" Choose
@@ -477,14 +498,14 @@ ${White}q. 返回\n"
 	6)
 		echo ""
 		read -p "请输入新的 Github 地址:" Github_URL
-		[[ -n ${Github_URL} ]] && bash ${AutoUpdate_File} -C ${Github_URL} || {
+		[[ ${Github_URL} ]] && bash ${AutoUpdate_File} -C ${Github_URL} || {
 			ECHO r "\nGithub 地址不能为空!"
 		}
 	;;
 	7)
 		echo ""
 		read -p "请输入新的固件标签:" FLAG
-		[[ -n ${FLAG} ]] && bash ${AutoUpdate_File} --flag ${FLAG} || {
+		[[ ${FLAG} ]] && bash ${AutoUpdate_File} --flag ${FLAG} || {
 			ECHO r "\n固件标签不能为空!"
 		}
 	;;
@@ -501,8 +522,8 @@ ${White}q. 返回\n"
 	;;
 	11)
 		echo ""
-		read -p "请输入你想要的启动方式[UEFI/BIOS]:" _BOOT
-		[[ -n ${_BOOT} ]] && bash ${AutoUpdate_File} -B ${_BOOT} || {
+		read -p "请输入你想要的启动方式[UEFI/BIOS]:" BOOT
+		[[ ${BOOT} ]] && bash ${AutoUpdate_File} -B ${BOOT} || {
 			ECHO r "\n启动方式不能为空!"
 		}
 	;;
@@ -512,9 +533,7 @@ done
 }
 
 SmartInfo_UI() {
-	USB_Info
-	if [[ $? == 0 ]]
-	then
+	USB_Info -a && {
 		clear
 		ECHO x "硬盘信息列表"
 		cat ${Phy_Disk_List} | while read Phy_Disk;do
@@ -522,11 +541,11 @@ SmartInfo_UI() {
 			sleep 1
 		done
 		ENTER
-	else
+	} || {
 		ECHO r "未检测到任何外接设备,请检查 USB 接口可用性或插入更多 USB 设备!"
 		sleep 2
 		return 1
-	fi
+	}
 }
 
 SmartInfo_Core() {
@@ -541,7 +560,7 @@ SmartInfo_Core() {
 	Phy_Name=$(GET_INFO "Device Model:")
 	FW_Version=$(GET_INFO "Firmware Version:")
 	Phy_Temp=$(grep "Temperature_Celsius" ${Smart_Info3} | awk '{print $10}')
-	[[ -n ${Phy_Temp} ]] && Phy_Temp="${Phy_Temp}°C"
+	[[ ${Phy_Temp} ]] && Phy_Temp="${Phy_Temp}°C"
 	Phy_ID=$(GET_INFO "Serial number:")
 	Phy_Capacity=$(GET_INFO "User Capacity:")
 	Phy_Part_Number=$(grep -c "${Phy_Disk}" ${Disk_Processed_List})
@@ -550,18 +569,20 @@ SmartInfo_Core() {
 	TRIM_Command=$(GET_INFO "TRIM Command:")
 	Power_On=$(grep "Power_On_Hours" ${Smart_Info3} | awk '{print $10}')
 	Power_Cycle_Count=$(grep "Power_Cycle_Count" ${Smart_Info3} | awk '{print $10}')
-	if [[ -n ${Power_On} ]]
+	if [[ ${Power_On} ]]
 	then
 		Power_Status="${Power_On} 小时 / ${Power_Cycle_Count} 次"
 	fi
-	if [[ $(GET_INFO "Rotation Rate:") =~ "Solid State" ]];then
+	if [[ $(GET_INFO "Rotation Rate:") =~ "Solid State" ]]
+	then
 		Phy_Type="固态硬盘"
 		Phy_RPM="不可用"
 		local LBAs_Written="$(grep "Total_LBAs_Written" ${Smart_Info3} | awk '{a=$10*512/1024/1024} {printf("%.2f",a)}') GB"
 		local LBAs_Read="$(grep "Total_LBAs_Read" ${Smart_Info3} | awk '{a=$10*512/1024/1024} {printf("%.2f",a)}') GB"
 	else
 		Phy_Type="其他"
-		if [[ $(GET_INFO "Rotation Rate:") =~ rpm ]];then
+		if [[ $(GET_INFO "Rotation Rate:") =~ rpm ]]
+		then
 			Phy_RPM=$(GET_INFO "Rotation Rate:")
 			Phy_Type="机械硬盘"
 		fi
@@ -571,7 +592,8 @@ SmartInfo_Core() {
 	}
 	Phy_LB=$(GET_INFO "Logical block size:")
 	Phy_PB=$(GET_INFO "Physical block size:")
-	if [[ -n ${Phy_PB} ]];then
+	if [[ ${Phy_PB} ]]
+	then
 		Phy_BS="${Phy_LB} / ${Phy_PB}"
 	else
 		Phy_BS="${Phy_LB}"
@@ -605,7 +627,8 @@ Sysinfo() {
 		CPU_Model=$(awk -F ':[ ]' '/model name/{printf ($2);exit}' /proc/cpuinfo)
 		CPU_Threads=$(grep 'processor' /proc/cpuinfo | sort -u | wc -l)
 		CPU_Usage=$(top -n 1 | grep "CPU:" | awk '{print $2}')
-		if [[ -z ${CPU_Model} ]];then
+		if [[ -z ${CPU_Model} ]]
+		then
 			CPU_Model=$(awk -F ':[ ]' '/system type/{printf ($2);exit}' /proc/cpuinfo)
 			Low_Mode=1
 		else
@@ -643,7 +666,7 @@ Sysinfo() {
 		}
 		echo -e "${Grey}CPU 使用率${Yellow}		${CPU_Usage}"
 		echo -e "${Grey}IPv4 地址${Yellow}		$(echo ${IPv4})"
-		[[ -n ${IPv6} ]] && echo -e "${Grey}IPv6 地址${Yellow}		[${IPv6}]"
+		[[ ${IPv6} ]] && echo -e "${Grey}IPv6 地址${Yellow}		[${IPv6}]"
 		echo -e "${Grey}运行时间${Yellow}		${Sys_Startup}"
 		echo -e "${Grey}文件系统${Yellow}		$(echo ${Support_Format})"
 		echo -e "${Grey}在线用户${Yellow}		${Online_Users}"
@@ -670,14 +693,14 @@ GET_INFO() {
 	for i in ${Smart_Info1} ${Smart_Info2} ${Smart_Info3};do
 		_Result="$(grep "$1" ${i} 2> /dev/null | cut -d ':' -f2-10)"
 		Result=$(eval echo "\${_Result}")
-		[[ -n ${Result} ]] && break
+		[[ ${Result} ]] && break
 	done
 	echo ${Result}
 }
 
 CHECK_PKG() {
 	which $1 > /dev/null 2>&1
-	[[ $? == 0 ]] && echo "true" || echo "false"
+	[[ $? == 0 ]] && echo true || echo false
 }
 
 ENTER() {
@@ -702,8 +725,9 @@ Grey="\e[36m"
 Green="\e[32m"
 
 Tools_Cache=/tmp/AutoBuild_Tools
-Tools_File=$(cd $(dirname $0) && pwd)/AutoBuild_Tools.sh
-AutoUpdate_File=/bin/AutoUpdate.sh
+Tools_File=$(command -v tools)
+AutoUpdate_File=$(command -v autoupdate)
+
 [[ ! -d ${Tools_Cache} ]] && mkdir -p ${Tools_Cache}
 Github_Raw="https://ghproxy.com/https://raw.githubusercontent.com/Hyy2001X/AutoBuild-Actions/master"
 AutoBuild_Tools_UI
