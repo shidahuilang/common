@@ -332,8 +332,7 @@ if [[ -f $BUILD_PATH/openwrt.sh ]]; then
   [[ ! -d "$BASE_PATH/usr/bin" ]] && mkdir $BASE_PATH/usr/bin
   cp -Rf $BUILD_PATH/openwrt.sh $BASE_PATH/usr/bin/openwrt
   chmod 777 $BASE_PATH/usr/bin/openwrt
-fi
-if [[ -f $BUILD_PATH/tools.sh ]]; then
+elif [[ -f $BUILD_PATH/tools.sh ]]; then
   echo "正在执行：给固件增加[tools]命令"
   [[ ! -d "$BASE_PATH/usr/bin" ]] && mkdir $BASE_PATH/usr/bin
   cp -Rf $BUILD_PATH/tools.sh $BASE_PATH/usr/bin/tools
@@ -817,11 +816,22 @@ fi
 
 function Diy_files() {
 echo "正在执行：files大法，设置固件无烦恼"
+
 if [[ -d "${GITHUB_WORKSPACE}/OP_DIY" ]]; then
   cp -Rf $HOME_PATH/build/common/${SOURCE}/* $BUILD_PATH
   cp -Rf ${GITHUB_WORKSPACE}/OP_DIY/${matrixtarget}/* $BUILD_PATH
+  
+elif [[ ${matrixtarget} == "nanopi_r2s" ]]; then
+  cp -Rf $HOME_PATH/build/common/nanopi_r2s/* $BUILD_PATH
+  
+elif [[ ${matrixtarget} == "nanopi_r4s" ]]; then
+  cp -Rf $HOME_PATH/build/common/nanopi_r4s/* $BUILD_PATH 
+  
+elif [[ ${matrixtarget} == "openwrt_amlogic" ]]; then
+  cp -Rf $HOME_PATH/build/common/openwrt_amlogic/* $BUILD_PATH   
 else
   cp -Rf $HOME_PATH/build/common/${SOURCE}/* $BUILD_PATH
+
 fi
 
 if [ -n "$(ls -A "$BUILD_PATH/diy" 2>/dev/null)" ]; then
