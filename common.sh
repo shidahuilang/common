@@ -343,10 +343,6 @@ fi
 function Diy_Lede() {
 echo "正在执行：Lede专用自定义"
 cat >>"${KEEPD}" <<-EOF
-/mnt/network
-/mnt/Detectionnetwork
-/etc/config/AdGuardHome.yaml
-/www/luci-static/argon/background
 EOF
 }
 
