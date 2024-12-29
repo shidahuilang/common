@@ -122,7 +122,7 @@ COOLSNOWWOLF)
   export REPO_URL="https://github.com/coolsnowwolf/lede"
   export SOURCE="Lede"
   export SOURCE_OWNER="Lean's"
-  export LUCI_EDITION="23.05"
+  export LUCI_EDITION="18.06"
   export DIY_WORK="${FOLDER_NAME}master"
 ;;
 LIENOL)
