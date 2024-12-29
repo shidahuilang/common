@@ -52,6 +52,7 @@ if [[ -n "${INPUTS_REPO_BRANCH}" ]]; then
   KEEP_LATEST="${KEEP_LATEST}"
   echo "SSH_ACTION=${INPUTS_SSH_ACTION}" >> ${GITHUB_ENV}
   WAREHOUSE_MAN="${GIT_REPOSITORY##*/}"
+  repo_plugins="$repo_matrix_target_path/release/plugins"
 else
   SOURCE_CODE="${SOURCE_CODE}"
   REPO_BRANCH="${REPO_BRANCH}"
@@ -180,6 +181,8 @@ echo "SOURCE=${SOURCE}" >> ${GITHUB_ENV}
 echo "LUCI_EDITION=${LUCI_EDITION}" >> ${GITHUB_ENV}
 echo "SOURCE_OWNER=${SOURCE_OWNER}" >> ${GITHUB_ENV}
 echo "DIY_WORK=${DIY_WORK}" >> ${GITHUB_ENV}
+echo "RELEASE_MD=$HOME_PATH/release.md" >> $GITHUB_ENV
+echo "RELEASEINFO_MD=$HOME_PATH/build/$MATRIX_TARGET/release/releaseinfo.md" >> $GITHUB_ENV
 echo "BUILD_PATH=${GITHUB_WORKSPACE}/openwrt/build/${FOLDER_NAME}" >> ${GITHUB_ENV}
 echo "FILES_PATH=${GITHUB_WORKSPACE}/openwrt/package/base-files/files" >> ${GITHUB_ENV}
 echo "REPAIR_PATH=${GITHUB_WORKSPACE}/openwrt/package/base-files/files/etc/openwrt_release" >> ${GITHUB_ENV}
