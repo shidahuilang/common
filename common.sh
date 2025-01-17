@@ -1621,32 +1621,31 @@ function Diy_adguardhome() {
     weizhicpu="1"
   fi
 
-# OpenClash内核下载
 if [[ ! "${weizhicpu}" == "1" ]] && [[ -n "${OpenClash_Core}" ]] && [[ "${OpenClash_branch}" =~ (master|dev) ]]; then
-  echo "正在执行：给 OpenClash 下载核心"
+  echo "正在执行：给openclash下载meta核心"
+  rm -rf ${HOME_PATH}/files/etc/openclash/core
+  mkdir -p ${HOME_PATH}/files/etc/openclash/core
+  cd ${HOME_PATH}/clash-neihe
+
+  # 下载meta内核
+  wget -q https://raw.githubusercontent.com/vernesong/OpenClash/core/${OpenClash_branch}/meta/clash-${Archclash}.tar.gz -O meta.tar.gz
   
-  # 清理旧文件
-  rm -rf "${HOME_PATH}/files/etc/openclash/core"
-  rm -rf "${HOME_PATH}/clash-neihe" && mkdir -p "${HOME_PATH}/clash-neihe"
-  mkdir -p "${HOME_PATH}/files/etc/openclash/core"
-  
-  cd "${HOME_PATH}/clash-neihe" || { echo "无法进入目录"; exit 1; }
-  
-  if [[ "${OpenClash_Core}" == "2" ]]; then
-    wget -q https://raw.githubusercontent.com/vernesong/OpenClash/core/"${OpenClash_branch}"/meta/clash-"${Archclash}".tar.gz -O meta.tar.gz
-    wget -q https://raw.githubusercontent.com/vernesong/OpenClash/core/"${OpenClash_branch}"/core_version -O core_version
-    
-    # 解压 meta.tar.gz
-    tar -zxvf meta.tar.gz -O > clash_meta
-    if [[ $? -eq 0 ]]; then
-      mv -f "${HOME_PATH}/clash-neihe/clash_meta" "${HOME_PATH}/files/etc/openclash/core/clash_meta"
-      sudo chmod +x "${HOME_PATH}/files/etc/openclash/core/clash_meta"
-      echo "OpenClash增加meta内核成功"
-    else
-      echo "OpenClash增加meta内核失败"
-    fi
+  # 解压并移动meta内核
+  tar -zxvf meta.tar.gz -O > clash_meta
+  if [[ $? -eq 0 ]]; then
+    mv -f ${HOME_PATH}/clash-neihe/clash_meta ${HOME_PATH}/files/etc/openclash/core/clash_meta
+    sudo chmod +x ${HOME_PATH}/files/etc/openclash/core/clash_meta
+    echo "OpenClash增加meta内核成功"
+  else
+    echo "OpenClash增加meta内核失败"
   fi
+
+  cd ${HOME_PATH}
+  rm -rf ${HOME_PATH}/clash-neihe
+else
+  echo "无需内核"
 fi
+
 
 
 # AdGuardHome内核下载
