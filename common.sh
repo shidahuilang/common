@@ -695,7 +695,7 @@ fi
 
 function Diy_IMMORTALWRT() {
 cd ${HOME_PATH}
-if [[ "${REPO_BRANCH}" =~ (openwrt-18.06|openwrt-18.06-k5.4|openwrt-21.02) ]]; then
+if [[ "${REPO_BRANCH}" =~ (openwrt-18.06|openwrt-18.06-k5.4|openwrt-21.02|openwrt-24.10) ]]; then
   if [[ -d "${HOME_PATH}/build/common/Share/v2raya" ]]; then
     rm -rf ${HOME_PATH}/feeds/helloworld/v2raya
     cp -Rf ${HOME_PATH}/build/common/Share/v2raya ${HOME_PATH}/feeds/helloworld/v2raya
