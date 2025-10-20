@@ -1111,6 +1111,8 @@ fi
 function Diy_feeds() {
 echo "正在执行：安装feeds,请耐心等待..."
 cd ${HOME_PATH}
+  # ---- 新增：自动修复 pcre 依赖 ----
+  fix_pcre_dependency
 ./scripts/feeds install -a
 
 if [[ ! -f "${HOME_PATH}/staging_dir/host/bin/upx" ]]; then
