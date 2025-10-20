@@ -259,7 +259,37 @@ if [[ `gcc --version |grep -c "buntu 13"` -eq '0' ]]; then
   gcc --version
 fi
 }
-
+#--------------------------------------------------
+# 自动修复 shadowsocks-libev 编译报错的 pcre 依赖
+# 支持 Ubuntu/Debian/CentOS/Arch
+#--------------------------------------------------
+function fix_pcre_dependency() {
+  TIME b "开始检测 pcre 开发包..."
+  if command -v apt-get &>/dev/null; then
+    # Debian/Ubuntu
+    dpkg -l | grep -q '^ii.*libpcre3-dev' && \
+      { TIME g "libpcre3-dev 已安装，跳过"; return 0; }
+    TIME y "未找到 libpcre3-dev，正在自动安装..."
+    sudo apt-get update -qq
+    sudo apt-get install -y libpcre3-dev
+  elif command -v yum &>/dev/null; then
+    # CentOS/RHEL
+    rpm -qa | grep -q 'pcre-devel' && \
+      { TIME g "pcre-devel 已安装，跳过"; return 0; }
+    TIME y "未找到 pcre-devel，正在自动安装..."
+    sudo yum install -y pcre-devel
+  elif command -v pacman &>/dev/null; then
+    # Arch
+    pacman -Q pcre &>/dev/null && \
+      { TIME g "pcre 已安装，跳过"; return 0; }
+    TIME y "未找到 pcre，正在自动安装..."
+    sudo pacman -S --noconfirm pcre
+  else
+    TIME r "未知包管理器，请手动安装 pcre 开发包"
+    return 1
+  fi
+  TIME g "pcre 依赖修复完成"
+}
 
 function Diy_checkout() {
 # 下载源码后，进行源码微调和增加插件源
