@@ -275,7 +275,7 @@ if [[ -n "${LUCI_CHECKUT}" ]]; then
 fi
 git pull
 
-sed -i '/langge/d; /helloworld/d; /passwall/d; /OpenClash/d' "feeds.conf.default"
+sed -i '/langge/d; /helloworld/d; /passwall/d; /passwall_packages/d; /passwall_luci/d; /OpenClash/d' "feeds.conf.default"
 cat feeds.conf.default|awk '!/^#/'|awk '!/^$/'|awk '!a[$1" "$2]++{print}' >uniq.conf
 mv -f uniq.conf feeds.conf.default
 
@@ -300,7 +300,7 @@ luci-app-gost,gost,luci-app-smartdns,smartdns,luci-app-wizard,luci-app-msd_lite,
 luci-app-ssr-plus,*luci-app-passwall*,luci-app-vssr,lua-maxminddb,v2dat,v2ray-geodata"
 t=(${z//,/ })
 for x in ${t[@]}; do \
-  find . -type d -name "${x}" |grep -v 'langge\|freifunk\|helloworld\|passwall3' |xargs -i rm -rf {}; \
+  find . -type d -name "${x}" |grep -v 'langge\|freifunk\|helloworld\|passwall\|passwall_packages\|passwall_luci' |xargs -i rm -rf {}; \
 done
 
 case "${SOURCE_CODE}" in
@@ -308,7 +308,7 @@ COOLSNOWWOLF)
   s="mentohust"
   c=(${s//,/ })
   for i in ${c[@]}; do \
-    find . -type d -name "${i}" |grep -v 'langge\|freifunk\|helloworld\|passwall3' |xargs -i rm -rf {}; \
+    find . -type d -name "${i}" |grep -v 'langge\|freifunk\|helloworld\|passwall\|passwall_packages\|passwall_luci' |xargs -i rm -rf {}; \
   done
   if [[ -d "${HOME_PATH}/build/common/Share/btrfs-progs" ]]; then
     rm -rf ${HOME_PATH}/feeds/packages/utils/btrfs-progs
@@ -319,13 +319,13 @@ LIENOL)
   s="mentohust,aliyundrive-webdav,pdnsd-alt,mt"
   c=(${s//,/ })
   for i in ${c[@]}; do \
-    find . -type d -name "${i}" |grep -v 'langge\|freifunk\|helloworld\|passwall3' |xargs -i rm -rf {}; \
+    find . -type d -name "${i}" |grep -v 'langge\|freifunk\|helloworld\|passwall\|passwall_packages\|passwall_luci' |xargs -i rm -rf {}; \
   done
   if [[ "${REPO_BRANCH}" == "19.07" ]]; then
     s="luci-app-unblockneteasemusic,luci-app-vssr,lua-maxminddb"
     c=(${s//,/ })
     for i in ${c[@]}; do \
-      find . -type d -name "${i}" |grep -v 'freifunk\|helloworld\|passwall3' |xargs -i rm -rf {}; \
+      find . -type d -name "${i}" |grep -v 'freifunk\|helloworld\|passwall\|passwall_packages\|passwall_luci' |xargs -i rm -rf {}; \
     done
     if [[ -d "${HOME_PATH}/build/common/Share/libcap" ]]; then
       rm -rf ${HOME_PATH}/feeds/packages/libs/libcap
@@ -360,20 +360,20 @@ IMMORTALWRT)
   s="luci-app-cifs,luci-app-aliyundrive-webdav,aliyundrive-webdav,aliyundrive-fuse"
   c=(${s//,/ })
   for i in ${c[@]}; do \
-    find . -type d -name "${i}" |grep -v 'langge\|freifunk\|helloworld\|passwall3' |xargs -i rm -rf {}; \
+    find . -type d -name "${i}" |grep -v 'langge\|freifunk\|helloworld\|passwall\|passwall_packages\|passwall_luci' |xargs -i rm -rf {}; \
   done
 ;;
 OFFICIAL)
   s="luci-app-wrtbwmon,wrtbwmon,luci-app-dockerman,docker,dockerd,bcm27xx-userland,luci-app-aliyundrive-webdav,aliyundrive-webdav,aliyundrive-fuse"
   c=(${s//,/ })
   for i in ${c[@]}; do \
-    find . -type d -name "${i}" |grep -v 'langge\|freifunk\|helloworld\|passwall3' |xargs -i rm -rf {}; \
+    find . -type d -name "${i}" |grep -v 'langge\|freifunk\|helloworld\|passwall\|passwall_packages\|passwall_luci' |xargs -i rm -rf {}; \
   done
   if [[ "${REPO_BRANCH}" == "openwrt-19.07" ]]; then
     s="luci-app-vssr,lua-maxminddb,luci-app-natter,natter,luci-app-unblockneteasemusic"
     c=(${s//,/ })
     for i in ${c[@]}; do \
-      find . -type d -name "${i}" |grep -v 'freifunk\|helloworld\|passwall3' |xargs -i rm -rf {}; \
+      find . -type d -name "${i}" |grep -v 'freifunk\|helloworld\|passwall\|passwall_packages\|passwall_luci' |xargs -i rm -rf {}; \
     done
     if [[ -d "${HOME_PATH}/build/common/Share/libcap" ]]; then
       rm -rf ${HOME_PATH}/feeds/packages/libs/libcap
@@ -385,7 +385,7 @@ OFFICIAL)
       cp -Rf ${HOME_PATH}/build/common/Share/ttyd ${HOME_PATH}/feeds/packages/utils/ttyd
     fi
     if [[ -d "${HOME_PATH}/build/common/Share/luci-app-samba4" ]]; then
-      find . -type d -name 'luci-app-samba4' -o -name 'samba4' |grep -v 'Share\|freifunk\|helloworld\|passwall3' | xargs -i rm -rf {}
+      find . -type d -name 'luci-app-samba4' -o -name 'samba4' |grep -v 'Share\|freifunk\|helloworld\|passwall\|passwall_packages\|passwall_luci' | xargs -i rm -rf {}
       cp -Rf ${HOME_PATH}/build/common/Share/luci-app-samba4 ${HOME_PATH}/feeds/luci/applications/luci-app-samba4
       cp -Rf ${HOME_PATH}/build/common/Share/samba4 ${HOME_PATH}/feeds/packages/net/samba4
       rm -rf ${HOME_PATH}/feeds/packages/libs/liburing
@@ -399,10 +399,10 @@ OFFICIAL)
     s="luci-app-vssr,lua-maxminddb,luci-app-natter,natter,luci-app-unblockneteasemusic"
     c=(${s//,/ })
     for i in ${c[@]}; do \
-      find . -type d -name "${i}" |grep -v 'freifunk\|helloworld\|passwall3' |xargs -i rm -rf {}; \
+      find . -type d -name "${i}" |grep -v 'freifunk\|helloworld\|passwall\|passwall_packages\|passwall_luci' |xargs -i rm -rf {}; \
     done
     if [[ -d "${HOME_PATH}/build/common/Share/luci-app-samba4" ]]; then
-      find . -type d -name 'luci-app-samba4' -o -name 'samba4' |grep -v 'Share\|freifunk\|helloworld\|passwall3' | xargs -i rm -rf {}
+      find . -type d -name 'luci-app-samba4' -o -name 'samba4' |grep -v 'Share\|freifunk\|helloworld\|passwall\|passwall_packages\|passwall_luci' | xargs -i rm -rf {}
       cp -Rf ${HOME_PATH}/build/common/Share/luci-app-samba4 ${HOME_PATH}/feeds/luci/applications/luci-app-samba4
       cp -Rf ${HOME_PATH}/build/common/Share/samba4 ${HOME_PATH}/feeds/packages/net/samba4
       rm -rf ${HOME_PATH}/feeds/packages/libs/liburing
@@ -436,13 +436,13 @@ XWRT)
   s="luci-app-wrtbwmon,wrtbwmon,luci-app-dockerman,docker,dockerd,bcm27xx-userland,luci-app-aliyundrive-webdav,aliyundrive-webdav,aliyundrive-fuse"
   c=(${s//,/ })
   for i in ${c[@]}; do \
-    find . -type d -name "${i}" |grep -v 'langge\|freifunk\|helloworld\|passwall3' |xargs -i rm -rf {}; \
+    find . -type d -name "${i}" |grep -v 'langge\|freifunk\|helloworld\|passwall\|passwall_packages\|passwall_luci' |xargs -i rm -rf {}; \
   done
 ;;
 esac
 
-for X in $(ls -1 "${HOME_PATH}/feeds/passwall3"); do
-  find . -type d -name "${X}" |grep -v 'langge\|passwall3' |xargs -i rm -rf {}
+for X in $(ls -1 "${HOME_PATH}/feeds/passwall_packages"); do
+  find . -type d -name "${X}" |grep -v 'langge\|passwall\|passwall_packages\|passwall_luci' |xargs -i rm -rf {}
 done
 # 删除软件包自带插件
 rm -rf feeds/packages/net/softethervpn5
@@ -682,12 +682,12 @@ if [[ "${REPO_BRANCH}" =~ (19.07|21.02) ]]; then
 fi
 # 取消shadowsocksr-libev的libopenssl-legacy依赖
 if [[ "${REPO_BRANCH}" =~ (19.07|21.02|22.03) ]]; then
-  if [[ -d "${HOME_PATH}/feeds/passwall3/shadowsocksr-libev" ]]; then
-    curl -o ${HOME_PATH}/feeds/passwall3/shadowsocksr-libev/Makefile https://raw.githubusercontent.com/shidahuilang/common/main/Share/shadowsocksr-libev/Makefile
+  if [[ -d "${HOME_PATH}/feeds/passwall_packages/shadowsocksr-libev" ]]; then
+    curl -o ${HOME_PATH}/feeds/passwall_packages/shadowsocksr-libev/Makefile https://raw.githubusercontent.com/shidahuilang/common/main/Share/shadowsocksr-libev/Makefile
   fi
   # 降低shadowsocks-rust版本,最新版本编译不成功
-  if [[ -d "${HOME_PATH}/feeds/passwall3/shadowsocks-rust" ]]; then
-    curl -o ${HOME_PATH}/feeds/passwall3/shadowsocks-rust/Makefile https://raw.githubusercontent.com/shidahuilang/common/main/Share/shadowsocks-rust/Makefile
+  if [[ -d "${HOME_PATH}/feeds/passwall_packages/shadowsocks-rust" ]]; then
+    curl -o ${HOME_PATH}/feeds/passwall_packages/shadowsocks-rust/Makefile https://raw.githubusercontent.com/shidahuilang/common/main/Share/shadowsocks-rust/Makefile
   fi
 fi
 }
@@ -732,12 +732,11 @@ if [[ "${REPO_BRANCH}" =~ (openwrt-19.07|openwrt-21.02) ]]; then
   fi
 fi
 if [[ "${REPO_BRANCH}" =~ (openwrt-19.07|openwrt-21.02|openwrt-22.03) ]]; then
-  if [[ -d "${HOME_PATH}/feeds/passwall3/shadowsocksr-libev" ]]; then
-    curl -o ${HOME_PATH}/feeds/passwall3/shadowsocksr-libev/Makefile https://raw.githubusercontent.com/281677160/common/main/Share/shadowsocksr-libev/Makefile
+  if [[ -d "${HOME_PATH}/feeds/passwall_packages/shadowsocksr-libev" ]]; then
+    curl -o ${HOME_PATH}/feeds/passwall_packages/shadowsocksr-libev/Makefile https://raw.githubusercontent.com/281677160/common/main/Share/shadowsocksr-libev/Makefile
   fi
-  # 降低shadowsocks-rust版本,最新版本编译不成功
-  if [[ -d "${HOME_PATH}/feeds/passwall3/shadowsocks-rust" ]]; then
-    curl -o ${HOME_PATH}/feeds/passwall3/shadowsocks-rust/Makefile https://raw.githubusercontent.com/281677160/common/main/Share/shadowsocks-rust/Makefile
+  if [[ -d "${HOME_PATH}/feeds/passwall_packages/shadowsocks-rust" ]]; then
+    curl -o ${HOME_PATH}/feeds/passwall_packages/shadowsocks-rust/Makefile https://raw.githubusercontent.com/281677160/common/main/Share/shadowsocks-rust/Makefile
   fi
 fi
 }
@@ -750,15 +749,10 @@ cd ${HOME_PATH}
 
 # passwall
 find . -type d -name '*luci-app-passwall*' -o -name 'passwall1' -o -name 'passwall2' | xargs -i rm -rf {}
-sed -i '/passwall.git\;luci/d; /passwall2/d' "feeds.conf.default"
-# Disabled passwall feeds as repositories don't exist
-# if [[ "${PassWall_luci_branch}" == "1" ]]; then
-#   echo "src-git passwall1 https://github.com/xiaorouji/openwrt-passwall.git;luci-smartdns-dev" >> "feeds.conf.default"
-#   echo "src-git passwall2 https://github.com/xiaorouji/openwrt-passwall2.git;main" >> "feeds.conf.default"
-# else
-#   echo "src-git passwall1 https://github.com/xiaorouji/openwrt-passwall.git;main" >> "feeds.conf.default"
-#   echo "src-git passwall2 https://github.com/xiaorouji/openwrt-passwall2.git;main" >> "feeds.conf.default"
-# fi
+sed -i '/passwall.git\;luci/d; /passwall2/d; /passwall_luci/d; /passwall_packages/d' "feeds.conf.default"
+# 使用新的passwall仓库地址
+echo "src-git passwall_packages https://github.com/Openwrt-Passwall/openwrt-passwall-packages.git;main" >> "feeds.conf.default"
+echo "src-git passwall_luci https://github.com/Openwrt-Passwall/openwrt-passwall.git;main" >> "feeds.conf.default"
 
 # openclash
 find . -type d -name '*luci-app-openclash*' -o -name '*OpenClash*' | xargs -i rm -rf {}
